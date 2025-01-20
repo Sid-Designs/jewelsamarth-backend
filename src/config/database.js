@@ -1,7 +1,14 @@
+require("dotenv").config();
 const { MongoClient, ServerApiVersion } = require("mongodb");
-const MONGODB_URI = process.env.MONGODB_DATABASE_URI;
 
-const client = new MongoClient(MONGODB_URI, {
+const URI = process.env.MONGODB_DATABASE_URI;
+
+if (!URI) {
+  console.error("MONGODB_DATABASE_URI environment variable is not set.");
+  process.exit(1);
+}
+
+const client = new MongoClient(URI, {
   serverApi: {
     version: ServerApiVersion.v1,
     strict: true,
@@ -9,15 +16,14 @@ const client = new MongoClient(MONGODB_URI, {
   },
 });
 
-async function run() {
+async function connectToDatabase() {
   try {
     await client.connect();
     await client.db("admin").command({ ping: 1 });
-    console.log(
-      "Pinged your deployment. You successfully connected to MongoDB!"
-    );
-  } finally {
-    await client.close();
+    console.log("Pinged your deployment. You successfully connected to MongoDB!");
+  } catch (err) {
+    console.error("Failed to connect to MongoDB:", err);
   }
 }
-run().catch(console.dir);
+
+module.exports = connectToDatabase;
