@@ -1,11 +1,6 @@
-require("dotenv").config();
-const express = require("express");
-const app = express();
+const server = require("./server");
 
-app.listen(process.env.PORT, () => {
-  console.log("Server Started At : Port ", process.env.PORT);
-});
-
-app.get("/", (req, res) => {
-  res.send("Home Page");
+const PORT = process.env.PORT || 5000;
+server.listen(PORT, () => {
+  console.log(`Server Started At :- ${PORT}`);
 });
