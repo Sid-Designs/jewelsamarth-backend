@@ -2,6 +2,8 @@ require("dotenv").config();
 const express = require("express");
 const connectToDatabase = require("./src/config/database");
 const User = require("./src/models/userModel");
+import { injectSpeedInsights } from '@vercel/speed-insights';
+
 
 const server = express();
 
@@ -26,5 +28,8 @@ server.get("/users", async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
+
+// Speed Insights
+injectSpeedInsights();
 
 module.exports = server;
