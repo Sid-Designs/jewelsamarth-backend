@@ -21,7 +21,7 @@ server.get("/", (req, res) => {
 server.get("/users", async (req, res) => {
   try {
     const users = await User.find();
-    res.json({ users: users });
+    res.send(users);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
