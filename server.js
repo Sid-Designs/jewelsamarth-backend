@@ -19,12 +19,8 @@ server.get("/", (req, res) => {
 });
 
 server.get("/users", async (req, res) => {
-  try {
-    const users = await User.find();
-    res.send(users);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
+  const users = await User.find();
+  res.send("User Page");
 });
 
 module.exports = server;
