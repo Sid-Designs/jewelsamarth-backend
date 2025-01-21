@@ -15,7 +15,7 @@ server.use(express.json());
 server.use("/register", require("./src/routes/userRoute"));
 
 server.get("/", (req, res) => {
-  res.send("Home Page");
+  res.send("Home Pages");
 });
 
 server.get("/users", async (req, res) => {
