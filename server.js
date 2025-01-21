@@ -15,11 +15,16 @@ server.use(express.json());
 server.use("/register", require("./src/routes/userRoute"));
 
 server.get("/", (req, res) => {
-  res.send("Home Pages");
+  res.send("Home Page");
 });
 
-server.get("/users", (req, res) => {
-  res.send("User Page");
+server.get("/users", async (req, res) => {
+  try {
+    const users = await User.find();
+    res.json({ message: "User Page", users: users });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
 });
 
 module.exports = server;
