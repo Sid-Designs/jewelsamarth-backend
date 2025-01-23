@@ -1,14 +1,27 @@
 const User = require("../models/userModel");
 
-const registerController = async (req, res) => {
+const userData = async (req, res) => {
+  const { userId } = req.body;
   try {
-    const { username, email, password } = req.body;
-    const newUser = new User({username, email, password});
-    await newUser.save();
-    res.json({ message: "User Registered Successfully", user: newUser });
-  } catch (err) {
-    res.json({ message: "Error Occured While Registering User", error: err.message });
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.json({
+        success: false,
+        message: "User Not Found",
+      });
+    }
+    res.json({
+      success: true,
+      message: "User Data Fetched Successfully",
+      data: {username: user.username, email: user.isAccountVerified},
+    });
+  } catch (error) {
+    res.json({
+      success: false,
+      message: "Error Occured While Fetching User Data",
+      error: error.message,
+    });
   }
 };
 
-module.exports = registerController;
+module.exports = userData;

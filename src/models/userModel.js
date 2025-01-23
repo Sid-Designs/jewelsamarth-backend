@@ -6,7 +6,6 @@ const userSchema = new Schema(
     username: {
       type: String,
       required: [true, "Username is required"],
-      unique: true,
     },
     email: {
       type: String,
@@ -23,8 +22,28 @@ const userSchema = new Schema(
       enum: ["user", "admin"],
       required: true,
     },
+    verifyOtp: {
+      type: String,
+      default: "",
+    },
+    verifyOtpExpireAt: {
+      type: Number,
+      default: 0,
+    },
+    isAccountVerified: {
+      type: Boolean,
+      default: false,
+    },
+    resetOtp: {
+      type: String,
+      default: "",
+    },
+    resetOtpExpireAt: {
+      type: Number,
+      default: 0,
+    },
   },
   { timestamps: true }
 );
 
-module.exports = mongoose.model("User", userSchema);
+module.exports = mongoose.model.users || mongoose.model("User", userSchema);
