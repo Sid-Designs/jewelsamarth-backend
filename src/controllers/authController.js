@@ -37,7 +37,11 @@ const registerController = async (req, res) => {
     await transporter.sendMail(mailOptions);
 
     // User Registered Successfully
-    return res.json({ message: "User Registered Successfully", user: newUser });
+    return res.json({
+      success: false,
+      message: "User Registered Successfully",
+      user: newUser,
+    });
   } catch (err) {
     return res.json({
       success: false,
