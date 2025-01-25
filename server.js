@@ -17,7 +17,7 @@ server.use(cookieParser());
 server.use("/api/auth", require("./src/routes/authRoute"));
 server.use("/api/user", require("./src/routes/userRoute"));
 
-// Routes
+// Home Routes
 server.get("/", (req, res) => {
   res.send("Home Page Found");
 });
