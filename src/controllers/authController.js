@@ -246,29 +246,32 @@ const resetPasswordController = async (req, res) => {
     if (!user) {
       return res.json({ success: false, message: "User Not Found" });
     }
-    if (user.resetOtp == "" || user.resetOtp !== otp) {
+    if (user.resetOtp === "" || user.resetOtp !== otp) {
       return res.json({ success: false, message: "Invalid OTP" });
     }
     if (user.resetOtpExpireAt < Date.now()) {
       return res.json({ success: false, message: "OTP Expired" });
     }
+
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     user.password = hashedPassword;
     user.resetOtp = "";
     user.resetOtpExpireAt = 0;
     await user.save();
+
     return res.json({
       success: true,
       message: "Password Reset Successfully",
     });
   } catch (error) {
-    res.json({
+    return res.json({
       success: false,
-      message: "Error Occured While Resetting Password",
+      message: "Error Occurred While Resetting Password",
       error: error.message,
     });
   }
 };
+
 
 module.exports = {
   registerController,
