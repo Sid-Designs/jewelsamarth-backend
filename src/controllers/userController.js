@@ -13,7 +13,7 @@ const userData = async (req, res) => {
     res.json({
       success: true,
       message: "User Data Fetched Successfully",
-      data: {username: user.username, email: user.isAccountVerified},
+      data: {username: user.username, verified: user.isAccountVerified},
     });
   } catch (error) {
     res.json({
