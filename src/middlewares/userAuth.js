@@ -1,20 +1,20 @@
 const jwt = require("jsonwebtoken");
 
 const userAuth = async (req, res, next) => {
-  const { token } = req.cookies;
+  const token = req.headers['x-auth-token'] || req.cookies.token;
   if (!token) {
-    res.json({ success: false, message: "User Not Authenticated" });
+    return res.json({ success: false, message: "User Not Authenticated" });
   }
   try {
-    const decodeToken = jwt.verify(token, process.env.JWT_SECRET);
-    if (decodeToken.id) {
-      req.body.userId = decodeToken.id;
+    const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
+    if (decodedToken.id) {
+      req.body.userId = decodedToken.id;
+      next();
     } else {
       return res.json({ success: false, message: "User Not Authenticated" });
     }
-    next();
   } catch (error) {
-    res.json({ success: false, message: "User Not Authenticated" });
+    return res.json({ success: false, message: "User Not Authenticated", error: error.message });
   }
 };
 
