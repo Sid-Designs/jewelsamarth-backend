@@ -6,47 +6,40 @@ const transporter = require("../config/nodeMailer");
 const registerController = async (req, res) => {
   const { username, email, password } = req.body;
   if (!username || !email || !password) {
-    return res.json({ success: false, message: "Missing Details" });
+    return res.json({ success: false, message: 'Missing Details' });
   }
   try {
     const existUser = await User.findOne({ email });
     if (existUser) {
-      return res.json({ success: false, message: "User Already Exists" });
+      return res.json({ success: false, message: 'User Already Exists' });
     }
     const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = await User({ username, email, password: hashedPassword });
+    const newUser = new User({ username, email, password: hashedPassword });
     await newUser.save();
     const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, {
-      expiresIn: "4d",
-    });
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: false,
-      sameSite: "Lax",
-      maxAge: 4 * 24 * 60 * 60 * 1000,
+      expiresIn: '4d',
     });
 
     // Send email
     const mailOptions = {
       from: process.env.SMTP_NO_REPLY_SENDER_EMAIL,
       to: email,
-      subject: "Welcome to Jewel Samarth!",
-      text: "Hello, welcome to Jewel Samarth! We are glad to have you.",
-      html: "<h1>Test Email</h1>",
+      subject: 'Welcome to Jewel Samarth!',
+      text: 'Hello, welcome to Jewel Samarth! We are glad to have you.',
+      html: '<h1>Test Email</h1>',
     };
-
     await transporter.sendMail(mailOptions);
 
-    // User Registered Successfully
     return res.json({
       success: true,
-      message: "User Registered Successfully",
+      message: 'User Registered Successfully',
+      token,
       user: newUser,
     });
   } catch (err) {
     return res.json({
       success: false,
-      message: "Error Occurred While Registering User",
+      message: 'Error Occurred While Registering User',
       error: err.message,
     });
   }
@@ -55,30 +48,30 @@ const registerController = async (req, res) => {
 const loginController = async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {
-    return res.json({ success: false, message: "Missing Details" });
+    return res.json({ success: false, message: 'Missing Details' });
   }
   try {
     const user = await User.findOne({ email });
     if (!user) {
-      return res.json({ success: false, message: "User Not Found" });
+      return res.json({ success: false, message: 'User Not Found' });
     }
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.json({ success: false, message: "Invalid Credentials" });
+      return res.json({ success: false, message: 'Invalid Credentials' });
     }
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "4d",
+      expiresIn: '4d',
     });
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: false,
-      maxAge: 4 * 24 * 60 * 60 * 1000,
+
+    return res.json({
+      success: true,
+      message: 'Logged In Successfully',
+      token,
     });
-    return res.json({ success: true, message: "Logged In Successfully" });
   } catch (err) {
-    res.json({
+    return res.json({
       success: false,
-      message: "Error Occured While Logging In",
+      message: 'Error Occurred While Logging In',
       error: err.message,
     });
   }
