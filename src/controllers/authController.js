@@ -220,9 +220,6 @@ const verifyResetOtpController = async (req, res) => {
     if (user.resetOtpExpireAt < Date.now()) {
       return res.json({ success: false, message: "OTP Expired" });
     }
-    user.resetOtp = "";
-    user.resetOtpExpireAt = 0;
-    await user.save();
     return res.json({
       success: true,
       message: "OTP Verified Successfully",
