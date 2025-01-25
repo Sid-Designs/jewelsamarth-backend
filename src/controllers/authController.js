@@ -66,6 +66,7 @@ const loginController = async (req, res) => {
     return res.json({
       success: true,
       message: "Logged In Successfully",
+      user: user,
       token,
     });
   } catch (err) {
