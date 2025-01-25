@@ -2,7 +2,7 @@ require("dotenv").config();
 const express = require("express");
 const connectToDatabase = require("./src/config/database");
 const cookieParser = require("cookie-parser");
-const User = require("./src/models/userModel");
+const cors = require("cors");
 
 const server = express();
 
@@ -12,6 +12,13 @@ connectToDatabase();
 // Middleware
 server.use(express.json());
 server.use(cookieParser());
+server.use(
+  cors({
+    origin: "http://localhost:5173",
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+    credentials: true,
+  })
+);
 
 // API Endpoints
 server.use("/api/auth", require("./src/routes/authRoute"));
