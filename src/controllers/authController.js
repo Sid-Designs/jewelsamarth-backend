@@ -84,7 +84,7 @@ const logoutController = async (req, res) => {
   } catch (err) {
     res.json({
       success: false,
-      message: "Error Occured While Logging Out",
+      message: "Error Occurred While Logging Out",
       error: err.message,
     });
   }
@@ -116,7 +116,7 @@ const sendVerifyOtpController = async (req, res) => {
   } catch (error) {
     res.json({
       success: false,
-      message: "Error Occured While Sending OTP",
+      message: "Error Occurred While Sending OTP",
       error: error.message,
     });
   }
@@ -132,7 +132,7 @@ const verifyOtpController = async (req, res) => {
     if (!user) {
       return res.json({ success: false, message: "User Not Found" });
     }
-    if (user.verifyOtp == "" || user.verifyOtp !== otp) {
+    if (user.verifyOtp === "" || user.verifyOtp !== otp) {
       return res.json({ success: false, message: "Invalid OTP" });
     }
     if (user.verifyOtpExpireAt < Date.now()) {
@@ -149,7 +149,7 @@ const verifyOtpController = async (req, res) => {
   } catch (error) {
     res.json({
       success: false,
-      message: "Error Occured While Verifying OTP",
+      message: "Error Occurred While Verifying OTP",
       error: error.message,
     });
   }
@@ -164,7 +164,7 @@ const isAccountVerified = async (req, res) => {
   } catch (err) {
     res.json({
       success: false,
-      error: error.message,
+      error: err.message,
     });
   }
 };
@@ -198,7 +198,7 @@ const resetOtpController = async (req, res) => {
   } catch (error) {
     res.json({
       success: false,
-      message: "Error Occured While Sending OTP",
+      message: "Error Occurred While Sending OTP",
       error: error.message,
     });
   }
@@ -214,7 +214,7 @@ const verifyResetOtpController = async (req, res) => {
     if (!user) {
       return res.json({ success: false, message: "User Not Found" });
     }
-    if (user.resetOtp == "" || user.resetOtp !== otp) {
+    if (user.resetOtp === "" || user.resetOtp !== otp) {
       return res.json({ success: false, message: "Invalid OTP" });
     }
     if (user.resetOtpExpireAt < Date.now()) {
@@ -271,7 +271,6 @@ const resetPasswordController = async (req, res) => {
     });
   }
 };
-
 
 module.exports = {
   registerController,
