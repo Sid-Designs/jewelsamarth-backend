@@ -23,6 +23,7 @@ server.use(
 // API Endpoints
 server.use("/api/auth", require("./src/routes/authRoute"));
 server.use("/api/user", require("./src/routes/userRoute"));
+server.use("/api/product", require("./src/routes/productRoute"));
 
 // Home Routes
 server.get("/", (req, res) => {
