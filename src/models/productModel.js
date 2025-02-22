@@ -13,7 +13,6 @@ const productSchema = new Schema(
     },
     size: {
       type: Number,
-      required: [true, "Size is required"],
     },
     gender: {
       type: String,

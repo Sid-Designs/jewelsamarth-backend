@@ -19,7 +19,6 @@ const addProductController = async (req, res) => {
     if (
       !name ||
       !description ||
-      !size ||
       !gender ||
       !regprice ||
       !saleprice ||
