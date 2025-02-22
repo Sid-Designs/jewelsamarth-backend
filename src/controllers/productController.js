@@ -48,7 +48,7 @@ const addProductController = async (req, res) => {
       images,
       subImages,
     });
-    // await newProduct.save();
+    await newProduct.save();
     return res.json({
       success: true,
       message: "Product Added Successfully",
