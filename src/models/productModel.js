@@ -29,6 +29,7 @@ const productSchema = new Schema(
     },
     sku: {
       type: String,
+      unique: true,
       required: [true, "SKU is required"],
     },
     stock: {
