@@ -62,4 +62,21 @@ const addProductController = async (req, res) => {
   }
 };
 
-module.exports = { addProductController };
+const getAllProductsController = async (req, res) => {
+  try{
+    const products = await Product.find({});
+    res.json({
+      success: true,
+      products: products,
+    });
+    
+  }catch(e){
+    res.json({
+      success: false,
+      message: "Error Occured While Fetching Products",
+      error: e.message,
+    });
+  }
+}
+
+module.exports = { addProductController, getAllProductsController };
