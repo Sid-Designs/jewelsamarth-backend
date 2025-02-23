@@ -78,4 +78,20 @@ const getAllProductsController = async (req, res) => {
   }
 }
 
-module.exports = { addProductController, getAllProductsController };
+const getProductByIdController = async (req, res) => {
+  try{
+    const productId = req.params.id;
+    const product = await Product.findById(productId);
+    res.json({
+      product: product,
+    });
+  }catch(e){
+    res.json({
+      success: false,
+      message: "Error Occured While Fetching Product By ID",
+      error: e.message,
+    });
+  }
+}
+
+module.exports = { addProductController, getAllProductsController, getProductByIdController };
