@@ -66,7 +66,6 @@ const getAllProductsController = async (req, res) => {
   try{
     const products = await Product.find({});
     res.json({
-      success: true,
       products: products,
     });
     
