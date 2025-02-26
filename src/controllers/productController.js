@@ -63,35 +63,67 @@ const addProductController = async (req, res) => {
 };
 
 const getAllProductsController = async (req, res) => {
-  try{
+  try {
     const products = await Product.find({});
     res.json({
       products: products,
     });
-    
-  }catch(e){
+  } catch (e) {
     res.json({
       success: false,
       message: "Error Occured While Fetching Products",
       error: e.message,
     });
   }
-}
+};
 
 const getProductByIdController = async (req, res) => {
-  try{
+  try {
     const productId = req.params.id;
     const product = await Product.findById(productId);
     res.json({
       product: product,
     });
-  }catch(e){
+  } catch (e) {
     res.json({
       success: false,
       message: "Error Occured While Fetching Product By ID",
       error: e.message,
     });
   }
-}
+};
 
-module.exports = { addProductController, getAllProductsController, getProductByIdController };
+const getProductByCategoryController = async (req, res) => {
+  try {
+    const productCategory = req.params.category;
+    const products = await Product.find({
+      productCategory: { $regex: new RegExp(`^${productCategory}$`, "i") },
+    });
+    if (products.length === 0) {
+      return res.json({
+        success: false,
+        message: "No products found in this category",
+      });
+    }
+
+    res.json({
+      success: true,
+      products: products,
+    });
+  } catch (e) {
+    res.json({
+      success: false,
+      message: "Error occurred while fetching products by category",
+      error: e.message,
+    });
+  }
+};
+
+
+
+module.exports = {
+  addProductController,
+  getAllProductsController,
+  getProductByIdController,
+  getProductByCategoryController,
+};
