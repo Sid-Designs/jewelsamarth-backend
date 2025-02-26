@@ -96,13 +96,17 @@ const getProductByIdController = async (req, res) => {
 const getProductByCategoryController = async (req, res) => {
   try {
     const productCategory = req.params.category;
+    const gender = req.query.gender; // Assuming gender is passed as a query parameter
+
     const products = await Product.find({
       productCategory: { $regex: new RegExp(`^${productCategory}$`, "i") },
+      gender: { $regex: new RegExp(`^${gender}$`, "i") },
     });
+
     if (products.length === 0) {
       return res.json({
         success: false,
-        message: "No products found in this category",
+        message: "No products found for this category and gender",
       });
     }
 
@@ -113,11 +117,12 @@ const getProductByCategoryController = async (req, res) => {
   } catch (e) {
     res.json({
       success: false,
-      message: "Error occurred while fetching products by category",
+      message: "Error occurred while fetching products by category and gender",
       error: e.message,
     });
   }
 };
+
 
 
 
