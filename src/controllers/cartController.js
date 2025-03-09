@@ -42,7 +42,42 @@ const addtocartController = async (req, res) => {
 };
 
 const getcartController = async (req, res) => {
-  try { 
+    try {
+      const { userId } = req.body;
+      const cart = await Cart.findOne({ userId });
+      if (!cart) {
+        return res.status(404).json({
+          success: false,
+          message: "Cart not found",
+        });
+      }
+      const productDetails = await Promise.all(
+        cart.items.map(async (item) => {
+          const product = await Product.findById(item.productId); // Find product by its ID
+          return {
+            ...product._doc, // Spread product details
+            quantity: item.quantity, // Add quantity from the cart
+          };
+        })
+      );
+      res.status(200).json({
+        success: true,
+        data: productDetails,
+      });
+    } catch (e) {
+      res.status(500).json({
+        success: false,
+        message: "Error occurred while fetching cart products",
+        error: e.message,
+      });
+    }
+  };
+  
+
+const allcartController = async (req, res) => {
+  try {
+    const carts = await Cart.find({});
+    res.status(200).json({ success: true, data: carts });
   } catch (e) {
     res.status(500).json({
       success: false,
@@ -52,17 +87,4 @@ const getcartController = async (req, res) => {
   }
 };
 
-const allcartController = async (req, res) => {
-    try { 
-        const carts = await Cart.find({});
-        res.status(200).json({ success: true, data: carts });
-    } catch (e) {
-      res.status(500).json({
-        success: false,
-        message: "Error occurred while adding product to cart",
-        error: e.message,
-      });
-    }
-}
-
-module.exports = {addtocartController, getcartController, allcartController};
+module.exports = { addtocartController, getcartController, allcartController };
