@@ -129,12 +129,6 @@ const getProductByCategoryController = async (req, res) => {
   }
 };
 
-
-
-
-
-
-
 module.exports = {
   addProductController,
   getAllProductsController,

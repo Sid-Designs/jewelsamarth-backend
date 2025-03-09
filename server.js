@@ -14,7 +14,10 @@ server.use(express.json());
 server.use(cookieParser());
 server.use(
   cors({
-    origin: ['http://localhost:5173',"https://jewelsamarth-frontend.vercel.app"],
+    origin: [
+      "http://localhost:5173",
+      "https://jewelsamarth-frontend.vercel.app",
+    ],
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
     credentials: true,
   })
@@ -24,6 +27,7 @@ server.use(
 server.use("/api/auth", require("./src/routes/authRoute"));
 server.use("/api/user", require("./src/routes/userRoute"));
 server.use("/api/product", require("./src/routes/productRoute"));
+server.use("/api/cart", require("./src/routes/cartRoute"));
 
 // Home Routes
 server.get("/", (req, res) => {
