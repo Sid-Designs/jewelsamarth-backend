@@ -43,7 +43,7 @@ const Customer = new Schema({
   ],
   payments:[
     {
-        paymentName:{
+      paymentMethod:{
             type: String,
         },
         paymentDetails:{

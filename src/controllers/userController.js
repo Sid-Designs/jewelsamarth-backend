@@ -170,7 +170,7 @@ const userAddressController = async (req, res) => {
 
 const userPaymentsController = async (req, res) => {
   try {
-    const { userId, paymentName, paymentDetails } = req.body;
+    const { userId, paymentMethod, paymentDetails } = req.body;
 
     if (!userId || !paymentName || !paymentDetails) {
       return res.json({
@@ -180,7 +180,7 @@ const userPaymentsController = async (req, res) => {
     }
 
     const newPayment = {
-      paymentName,
+      paymentMethod,
       paymentDetails,
     };
 
