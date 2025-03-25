@@ -172,7 +172,7 @@ const userPaymentsController = async (req, res) => {
   try {
     const { userId, paymentMethod, paymentDetails } = req.body;
 
-    if (!userId || !paymentName || !paymentDetails) {
+    if (!userId || !paymentMethod || !paymentDetails) {
       return res.json({
         success: false,
         message: "User ID, Payment Name, and Payment Details are required",
