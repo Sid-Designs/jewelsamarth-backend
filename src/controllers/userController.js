@@ -31,27 +31,24 @@ const userData = async (req, res) => {
 
 const userProfileController = async (req, res) => {
   try {
-    const { userId, firstName, lastName, email, phone, gender, birthDate } =
-      req.body;
+    const { userId, firstName, lastName, email, phone, gender, birthDate } = req.body;
 
-    if (
-      !userId ||
-      !firstName ||
-      !lastName ||
-      !email ||
-      !phone ||
-      !gender ||
-      !birthDate
-    ) {
+    // Check for required fields
+    if (!userId || !firstName || !lastName || !email || !phone || !gender || !birthDate) {
       return res.json({
         success: false,
         message: "All Fields are required",
       });
     }
 
+    // Format birthDate as a Date object
+    const formattedBirthDate = new Date(birthDate);
+
+    // Check if customer exists
     const customer = await Customer.findOne({ userId });
 
     if (customer) {
+      // Update existing customer
       const updatedCustomer = await Customer.findOneAndUpdate(
         { userId },
         {
@@ -60,17 +57,18 @@ const userProfileController = async (req, res) => {
           email,
           phone,
           gender,
-          birthDate,
+          birthDate: formattedBirthDate, // Properly formatted date
         },
         { new: true }
       );
 
-      res.json({
+      return res.json({
         success: true,
         message: "Profile Data Updated Successfully",
         data: updatedCustomer,
       });
     } else {
+      // Create a new customer
       const newCustomer = new Customer({
         userId,
         firstName,
@@ -78,25 +76,27 @@ const userProfileController = async (req, res) => {
         email,
         phone,
         gender,
-        birthDate,
+        birthDate: formattedBirthDate, // Properly formatted date
       });
 
       await newCustomer.save();
 
-      res.json({
+      return res.json({
         success: true,
         message: "New Profile Created Successfully",
         data: newCustomer,
       });
     }
   } catch (e) {
-    res.json({
+    console.error("Error processing profile data:", e.message); // Log the error
+    return res.json({
       success: false,
       message: "Error Occurred While Processing Profile Data",
       error: e.message,
     });
   }
 };
+
 
 const userAddressController = async (req, res) => {
   try {

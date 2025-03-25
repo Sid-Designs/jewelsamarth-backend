@@ -28,6 +28,9 @@ const Customer = new Schema({
     type: String,
     enum: ["Men", "Women", "Other"],
   },
+  birthDate:{
+    type: Date,
+  },
   address: [
     {
       addressName: {
