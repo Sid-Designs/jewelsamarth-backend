@@ -225,7 +225,7 @@ const userPaymentsController = async (req, res) => {
 };
 
 const userProfileDataController = async (req, res) => {
-  const { userId } = req.body;
+  const { userId } = req.params;
   try {
     const user = await Customer.findOne({ userId });
     if (!user) {

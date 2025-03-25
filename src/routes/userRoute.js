@@ -7,6 +7,6 @@ router.get("/data", userAuth, userData);
 router.post("/profile-update", userProfileController);
 router.post("/address-update", userAddressController);
 router.post("/payments-update", userPaymentsController);
-router.get("/profile-data", userProfileDataController);
+router.get("/profile-data/:userId", userProfileDataController);
 
 module.exports = router;
