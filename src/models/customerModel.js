@@ -1,0 +1,59 @@
+const mongoose = require("mongoose");
+const Schema = mongoose.Schema;
+
+const Customer = new Schema({
+  userId: {
+    type: Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+    index: true, // Added index
+  },
+  firstName: {
+    type: String,
+  },
+  lastName: {
+    type: String,
+  },
+  email: {
+    type: String,
+    unique: true,
+    match: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+  },
+  phone: {
+    type: String,
+    unique: true,
+    match: /^[0-9]{10}$/,
+  },
+  gender: {
+    type: String,
+    enum: ["Men", "Women", "Other"],
+  },
+  address: [
+    {
+      addressName: {
+        type: String,
+      },
+      userAddress: {
+        type: String,
+      },
+    },
+  ],
+  payments:[
+    {
+        paymentName:{
+            type: String,
+        },
+        paymentDetails:{
+            type: String,
+        }
+    }
+  ],
+  state: {
+    type: String,
+  },
+  city: {
+    type: String,
+  },
+});
+
+module.exports = mongoose.model("Customer", Customer);
