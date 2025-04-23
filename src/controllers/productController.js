@@ -129,9 +129,33 @@ const getProductByCategoryController = async (req, res) => {
   }
 };
 
+const getProductBySearchController = async (req, res) => {
+  const query = req.query.q;
+  try{
+    const result = await Product.find({
+      $or:[
+        {name: {$regex: query, $options: 'i'}},
+        {productTags: {$regex: query, $options: 'i'}},
+        {productCategory: {$regex: query, $options: 'i'}},
+      ]
+    }).select("name productTags productCategory regprice saleprice description images subImages createdAt")
+    res.json({
+      success: true,
+      products: result,
+    });
+  }catch(e){
+    res.json({
+      success: false,
+      message: "Error Occured While Fetching Products",
+      error: e.message,
+    });
+  }
+}
+
 module.exports = {
   addProductController,
   getAllProductsController,
   getProductByIdController,
   getProductByCategoryController,
+  getProductBySearchController
 };

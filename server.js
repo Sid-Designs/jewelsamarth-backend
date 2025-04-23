@@ -28,6 +28,7 @@ server.use("/api/auth", require("./src/routes/authRoute"));
 server.use("/api/user", require("./src/routes/userRoute"));
 server.use("/api/product", require("./src/routes/productRoute"));
 server.use("/api/cart", require("./src/routes/cartRoute"));
+server.use("/api/order", require("./src/routes/orderRoute"));
 
 // Home Routes
 server.get("/", (req, res) => {
