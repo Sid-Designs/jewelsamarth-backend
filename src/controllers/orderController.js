@@ -164,6 +164,29 @@ const couponController = async (req, res) => {
   }
 };
 
+const getOrderDetailsController = async (req, res) =>{
+  try{
+    const { orderId } = req.params;
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.json({
+        success: false,
+        message: "Order not found",
+      });
+    }
+    res.json({
+      success: true,
+      order,
+    });
+  }catch(e){
+    res.json({
+      success: false,
+      message: "Error Occured While Fetching Order Details",
+      error: e.message,
+    });
+  }
+}
+
 // All Order
 const getAllOrdersController = async (req, res) => {
   try {
@@ -184,5 +207,6 @@ module.exports = {
   createOrderController,
   verifyPaymentController,
   couponController,
-  getAllOrdersController
+  getAllOrdersController,
+  getOrderDetailsController
 };
