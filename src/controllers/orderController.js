@@ -144,6 +144,7 @@ const verifyPaymentController = async (req, res) => {
 const couponController = async (req, res) => {
   try {
     const { couponCode } = req.body;
+    
     const coupon = await Coupon.findOne({ code: couponCode });
 
     if (!coupon) {

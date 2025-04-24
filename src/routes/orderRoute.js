@@ -5,6 +5,7 @@ const {createOrderController, verifyPaymentController, couponController, getOrde
 
 router.post('/checkout', createOrderController);
 router.post('/verify', verifyPaymentController);
+router.post('/coupon/apply', couponController);
 router.post('/details/:orderId', getOrderDetailsController);
 router.get("/all", checkAdmin, getAllOrdersController);
 
