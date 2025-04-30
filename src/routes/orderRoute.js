@@ -15,6 +15,6 @@ router.post("/verify", verifyPaymentController);
 router.post("/coupon/apply", couponController);
 router.post("/details/:orderId", getOrderDetailsController);
 router.get("/all", checkAdmin, getAllOrdersController);
-router.get("/details", getAllOrderDetailsController);
+router.post("/details", getAllOrderDetailsController);
 
 module.exports = router;
