@@ -5,42 +5,75 @@ const transporter = require("../config/nodeMailer");
 
 const registerController = async (req, res) => {
   const { username, email, password } = req.body;
+
+  // Validate required fields
   if (!username || !email || !password) {
-    return res.json({ success: false, message: "Missing Details" });
+    return res.status(400).json({
+      success: false,
+      message: "Missing required details: username, email, and password",
+    });
   }
+
   try {
-    const existUser = await User.findOne({ email });
-    if (existUser) {
-      return res.json({ success: false, message: "User Already Exists" });
+    // Check if user already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(409).json({ // Conflict status code
+        success: false,
+        message: "User already exists",
+      });
     }
+
+    // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create a new user
     const newUser = new User({ username, email, password: hashedPassword });
     await newUser.save();
+
+    // Generate JWT token
     const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, {
-      expiresIn: "4d",
+      expiresIn: "4d", // Token expires in 4 days
     });
 
-    // Send email
+    // Send welcome email
     const mailOptions = {
       from: process.env.SMTP_NO_REPLY_SENDER_EMAIL,
       to: email,
       subject: "Welcome to Jewel Samarth!",
-      text: "Hello, welcome to Jewel Samarth! We are glad to have you.",
-      html: "<h1>Test Email</h1>",
+      text: `Hello ${username}, welcome to Jewel Samarth! We are glad to have you.`,
+      html: `<h1>Welcome to Jewel Samarth</h1><p>Hello ${username}, we are excited to have you with us!</p>`,
     };
-    await transporter.sendMail(mailOptions);
 
-    return res.json({
+    try {
+      await transporter.sendMail(mailOptions);
+    } catch (emailError) {
+      console.error("Email sending error:", emailError.message);
+      return res.status(500).json({
+        success: false,
+        message: "Registration successful, but failed to send the welcome email",
+        error: emailError.message,
+      });
+    }
+
+    // Send response after successful registration
+    return res.status(201).json({
       success: true,
-      message: "User Registered Successfully",
+      message: "User registered successfully",
       token,
-      user: newUser,
+      user: {
+        id: newUser._id,
+        username: newUser.username,
+        email: newUser.email,
+        isAccountVerified: newUser.isAccountVerified || false, // Assuming this field exists
+      },
     });
-  } catch (err) {
-    return res.json({
+
+  } catch (error) {
+    return res.status(500).json({
       success: false,
-      message: "Error Occurred While Registering User",
-      error: err.message,
+      message: "An error occurred during registration",
+      error: error.message,
     });
   }
 };
