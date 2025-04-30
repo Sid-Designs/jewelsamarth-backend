@@ -189,7 +189,6 @@ const getOrderDetailsController = async (req, res) =>{
   }
 }
 
-// All Order
 const getAllOrdersController = async (req, res) => {
   try {
     const orders = await Order.find({});
@@ -205,10 +204,28 @@ const getAllOrdersController = async (req, res) => {
   }
 };
 
+const getAllOrderDetailsController = async (req, res) => {
+  try {
+    const {userId} = req.body;
+    const orders = await Order.find({userId});
+    res.json({
+      success: true,
+      orders,
+    });
+  } catch (e) {
+    res.json({
+      success: false,
+      message: "Error Occured While Fetching All Orders",
+      error: e.message,
+    });
+  }
+}
+
 module.exports = {
   createOrderController,
   verifyPaymentController,
   couponController,
   getAllOrdersController,
-  getOrderDetailsController
+  getOrderDetailsController,
+  getAllOrderDetailsController
 };
