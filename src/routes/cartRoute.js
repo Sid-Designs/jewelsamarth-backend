@@ -17,4 +17,5 @@ router.delete("/remove/:productId", removeCartController);
 router.post("/get", getcartController);
 router.get("/getall", checkAdmin, allcartController);
 
+
 module.exports = router;

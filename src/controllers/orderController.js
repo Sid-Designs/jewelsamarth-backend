@@ -1,5 +1,6 @@
 const Order = require("../models/orderModel");
 const Coupon = require("../models/couponModel");
+const Cart = require("../models/cartModel");
 const Razorpay = require("razorpay");
 const crypto = require("crypto");
 require("dotenv").config();
@@ -88,6 +89,8 @@ const createOrderController = async (req, res) => {
     });
 
     await newOrder.save();
+
+    await Cart.findOneAndDelete({ userId });
 
     res.json({
       success: true,
