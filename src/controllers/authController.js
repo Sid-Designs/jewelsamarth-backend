@@ -18,7 +18,7 @@ const registerController = async (req, res) => {
     // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(409).json({ // Conflict status code
+      return res.status(409).json({
         success: false,
         message: "User already exists",
       });
@@ -36,27 +36,22 @@ const registerController = async (req, res) => {
       expiresIn: "4d", // Token expires in 4 days
     });
 
-    // Send welcome email
-    const mailOptions = {
-      from: process.env.SMTP_NO_REPLY_SENDER_EMAIL,
-      to: email,
-      subject: "Welcome to Jewel Samarth!",
-      text: `Hello ${username}, welcome to Jewel Samarth! We are glad to have you.`,
-      html: `<h1>Welcome to Jewel Samarth</h1><p>Hello ${username}, we are excited to have you with us!</p>`,
-    };
-
+    // Attempt to send welcome email
     try {
+      const mailOptions = {
+        from: process.env.SMTP_NO_REPLY_SENDER_EMAIL,
+        to: email,
+        subject: "Welcome to Jewel Samarth!",
+        text: `Hello ${username}, welcome to Jewel Samarth! We are glad to have you.`,
+        html: `<h1>Welcome to Jewel Samarth</h1><p>Hello ${username}, we are excited to have you with us!</p>`,
+      };
+
       await transporter.sendMail(mailOptions);
     } catch (emailError) {
-      console.error("Email sending error:", emailError.message);
-      return res.status(500).json({
-        success: false,
-        message: "Registration successful, but failed to send the welcome email",
-        error: emailError.message,
-      });
+      // Log the error but allow registration and login to proceed
     }
 
-    // Send response after successful registration
+    // Auto-login user by returning the token and user details
     return res.status(201).json({
       success: true,
       message: "User registered successfully",
@@ -70,6 +65,7 @@ const registerController = async (req, res) => {
     });
 
   } catch (error) {
+    console.error("Error during registration:", error.message);
     return res.status(500).json({
       success: false,
       message: "An error occurred during registration",
