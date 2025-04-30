@@ -41,38 +41,127 @@ const addtocartController = async (req, res) => {
   }
 };
 
-const getcartController = async (req, res) => {
-    try {
-      const { userId } = req.body;
-      const cart = await Cart.findOne({ userId });
-      if (!cart) {
-        return res.status(404).json({
-          success: false,
-          message: "Cart not found",
-        });
-      }
-      const productDetails = await Promise.all(
-        cart.items.map(async (item) => {
-          const product = await Product.findById(item.productId); // Find product by its ID
-          return {
-            ...product._doc, // Spread product details
-            quantity: item.quantity, // Add quantity from the cart
-          };
-        })
-      );
-      res.status(200).json({
-        success: true,
-        data: productDetails,
-      });
-    } catch (e) {
-      res.status(500).json({
+const removeCartController = async (req, res) => {
+  const { productId } = req.params;
+  const { userId } = req.body;
+
+  try {
+    const cart = await Cart.findOne({ userId });
+    if (!cart) {
+      return res.json({ success: false, message: "Cart not found" });
+    }
+
+    const productIndex = cart.items.findIndex(
+      (item) => item.productId.toString() === productId
+    );
+
+    if (productIndex === -1) {
+      return res.status(404).json({
         success: false,
-        message: "Error occurred while fetching cart products",
-        error: e.message,
+        message: "Product not found in cart",
       });
     }
-  };
-  
+
+    cart.items.splice(productIndex, 1);
+
+    await cart.save();
+
+    res.json({
+      success: true,
+      message: "Product removed successfully from the cart",
+      cart,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error occurred while removing product from cart",
+      error: error.message,
+    });
+  }
+};
+
+const qtyPlusController = async (req, res) => {
+  const { productId } = req.params;
+  const { userId } = req.body;
+
+  try {
+    const cart = await Cart.findOne({ userId });
+    if (!cart) {
+      return res.json({ success: false, message: "Cart not found" });
+    }
+    const productIndex = cart.items.findIndex(
+      (item) => item.productId.toString() === productId
+    );
+    if (productIndex === -1) {
+      return res.status(404).json({ success: false, message: "Product not found in cart" });
+    }
+    cart.items[productIndex].quantity += 1;
+    await cart.save();
+    res.json({ success: true, message: "Quantity increased successfully", cart });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Error occurred while updating quantity", error: err.message });
+  }
+};
+
+const qtyMinusController = async (req, res) => {
+  const { productId } = req.params;
+  const { userId } = req.body;
+
+  try {
+    const cart = await Cart.findOne({ userId });
+    if (!cart) {
+      return res.json({ success: false, message: "Cart not found" });
+    }
+    const productIndex = cart.items.findIndex(
+      (item) => item.productId.toString() === productId
+    );
+    if (productIndex === -1) {
+      return res.status(404).json({ success: false, message: "Product not found in cart" });
+    }
+    if (cart.items[productIndex].quantity > 1) {
+      cart.items[productIndex].quantity -= 1;
+      await cart.save();
+    } else {
+      cart.items.splice(productIndex, 1);
+      await cart.save();
+    }
+    res.json({ success: true, message: "Quantity decreased successfully", cart });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Error occurred while updating quantity", error: err.message });
+  }
+};
+
+const getcartController = async (req, res) => {
+  try {
+    const { userId } = req.body;
+    const cart = await Cart.findOne({ userId });
+    if (!cart) {
+      return res.status(404).json({
+        success: false,
+        message: "Cart not found",
+      });
+    }
+    const productDetails = await Promise.all(
+      cart.items.map(async (item) => {
+        const product = await Product.findById(item.productId); // Find product by its ID
+        return {
+          ...product._doc, // Spread product details
+          quantity: item.quantity, // Add quantity from the cart
+        };
+      })
+    );
+    res.status(200).json({
+      success: true,
+      data: productDetails,
+    });
+  } catch (e) {
+    res.status(500).json({
+      success: false,
+      message: "Error occurred while fetching cart products",
+      error: e.message,
+    });
+  }
+};
 
 const allcartController = async (req, res) => {
   try {
@@ -87,4 +176,11 @@ const allcartController = async (req, res) => {
   }
 };
 
-module.exports = { addtocartController, getcartController, allcartController };
+module.exports = {
+  addtocartController,
+  qtyPlusController,
+  qtyMinusController,
+  removeCartController,
+  getcartController,
+  allcartController,
+};

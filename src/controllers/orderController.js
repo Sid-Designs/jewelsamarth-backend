@@ -89,14 +89,14 @@ const createOrderController = async (req, res) => {
 
     await newOrder.save();
 
-    res.status(201).json({
+    res.json({
       success: true,
       message: "Order created successfully",
       order: newOrder,
       razorpayOrder,
     });
   } catch (e) {
-    res.status(500).json({
+    res.json({
       success: false,
       message: `Error occurred while creating order: ${e.message}`,
       error: e.message,
@@ -117,6 +117,7 @@ const verifyPaymentController = async (req, res) => {
         message: "Payment Verification Failed",
       });
     }
+
     const order = await Order.findOneAndUpdate(
       { userId },
       { payment_id: payment_id, paymentStatus: "paid" }
