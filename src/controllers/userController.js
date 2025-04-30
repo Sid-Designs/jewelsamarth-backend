@@ -31,10 +31,19 @@ const userData = async (req, res) => {
 
 const userProfileController = async (req, res) => {
   try {
-    const { userId, firstName, lastName, email, phone, gender, birthDate } = req.body;
+    const { userId, firstName, lastName, email, phone, gender, birthDate } =
+      req.body;
 
     // Check for required fields
-    if (!userId || !firstName || !lastName || !email || !phone || !gender || !birthDate) {
+    if (
+      !userId ||
+      !firstName ||
+      !lastName ||
+      !email ||
+      !phone ||
+      !gender ||
+      !birthDate
+    ) {
       return res.json({
         success: false,
         message: "All Fields are required",
@@ -96,7 +105,6 @@ const userProfileController = async (req, res) => {
     });
   }
 };
-
 
 const userAddressController = async (req, res) => {
   try {
@@ -168,6 +176,151 @@ const userAddressController = async (req, res) => {
   }
 };
 
+const userAddressDeleteController = async (req, res) => {
+  try {
+    const { userId, addressId, addressName } = req.body;
+
+    if (!userId || !addressId || !addressName) {
+      return res.status(400).json({
+        success: false,
+        message: "User ID, Address ID (_id), and Address Name are required",
+      });
+    }
+
+    const customer = await Customer.findOne({ userId });
+
+    if (!customer) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    const addressToDelete = customer.address.find(
+      (address) =>
+        address._id.toString() === addressId &&
+        address.addressName === addressName
+    );
+
+    if (!addressToDelete) {
+      return res.status(403).json({
+        success: false,
+        message: "Address not found or does not belong to the user",
+      });
+    }
+
+    customer.address = customer.address.filter(
+      (address) => address._id.toString() !== addressId
+    );
+
+    await customer.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Address deleted successfully",
+      data: customer,
+    });
+  } catch (error) {
+    console.error("Error deleting address:", error);
+    return res.status(500).json({
+      success: false,
+      message: "An error occurred while deleting the address",
+      error: error.message,
+    });
+  }
+};
+
+const userAddressUpdateController = async (req, res) => {
+  try {
+    const { userId, addressId, userAddress } = req.body;
+
+    if (!userId || !addressId || !userAddress) {
+      return res.status(400).json({
+        success: false,
+        message: "User ID, Address ID (_id), and User Address are required",
+      });
+    }
+
+    const customer = await Customer.findOne({ userId });
+
+    if (!customer) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    const addressToUpdate = customer.address.find(
+      (address) => address._id.toString() === addressId
+    );
+
+    if (!addressToUpdate) {
+      return res.status(403).json({
+        success: false,
+        message: "Address not found or does not belong to the user",
+      });
+    }
+
+    addressToUpdate.userAddress = userAddress;
+
+    await customer.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Address updated successfully",
+      data: customer,
+    });
+  } catch (error) {
+    console.error("Error updating address:", error);
+    return res.status(500).json({
+      success: false,
+      message: "An error occurred while updating the address",
+      error: error.message,
+    });
+  }
+};
+
+const setDefaultAddressController = async (req, res) => {
+  try {
+    const { userId, addressId } = req.body;
+
+    if (!userId || !addressId) {
+      return res.status(400).json({
+        success: false,
+        message: "User ID and Address ID are required",
+      });
+    }
+
+    const customer = await Customer.findOne({ userId });
+
+    if (!customer) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    customer.address.forEach((address) => {
+      address.isDefault = address._id.toString() === addressId;
+    });
+
+    await customer.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Default address updated successfully",
+      data: customer,
+    });
+  } catch (error) {
+    console.error("Error setting default address:", error);
+    return res.status(500).json({
+      success: false,
+      message: "An error occurred while updating the default address",
+      error: error.message,
+    });
+  }
+};
+
 const userPaymentsController = async (req, res) => {
   try {
     const { userId, paymentMethod, paymentDetails } = req.body;
@@ -224,6 +377,163 @@ const userPaymentsController = async (req, res) => {
   }
 };
 
+const userPaymentUpdateController = async (req, res) => {
+  try {
+    const { userId, paymentId, paymentMethod, paymentDetails } = req.body;
+
+    // Validate required input
+    if (!userId || !paymentId || (!paymentMethod && !paymentDetails)) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "User ID, Payment ID, and at least one update field (Payment Method or Details) are required",
+      });
+    }
+
+    // Find user by userId
+    const customer = await Customer.findOne({ userId });
+
+    if (!customer) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Find the payment to update
+    const paymentToUpdate = customer.payments.find(
+      (payment) => payment._id.toString() === paymentId
+    );
+
+    if (!paymentToUpdate) {
+      return res.status(403).json({
+        success: false,
+        message: "Payment not found or does not belong to the user",
+      });
+    }
+
+    // Update only the provided fields
+    if (paymentMethod) paymentToUpdate.paymentMethod = paymentMethod;
+    if (paymentDetails) paymentToUpdate.paymentDetails = paymentDetails;
+
+    // Save updated customer record
+    await customer.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Payment details updated successfully",
+      data: customer,
+    });
+  } catch (error) {
+    // Handle unexpected errors
+    console.error("Error updating payment:", error);
+    return res.status(500).json({
+      success: false,
+      message: "An error occurred while updating the payment",
+      error: error.message,
+    });
+  }
+};
+
+const userPaymentDeleteController = async (req, res) => {
+  try {
+    const { userId, paymentId } = req.body;
+
+    // Validate required input
+    if (!userId || !paymentId) {
+      return res.status(400).json({
+        success: false,
+        message: "User ID and Payment ID are required",
+      });
+    }
+
+    // Find user by userId
+    const customer = await Customer.findOne({ userId });
+
+    if (!customer) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Find and remove the payment
+    const paymentToDelete = customer.payments.find(
+      (payment) => payment._id.toString() === paymentId
+    );
+
+    if (!paymentToDelete) {
+      return res.status(403).json({
+        success: false,
+        message: "Payment not found or does not belong to the user",
+      });
+    }
+
+    // Filter out the payment
+    customer.payments = customer.payments.filter(
+      (payment) => payment._id.toString() !== paymentId
+    );
+
+    // Save updated customer record
+    await customer.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Payment deleted successfully",
+      data: customer,
+    });
+  } catch (error) {
+    // Handle unexpected errors
+    console.error("Error deleting payment:", error);
+    return res.status(500).json({
+      success: false,
+      message: "An error occurred while deleting the payment",
+      error: error.message,
+    });
+  }
+};
+
+const setDefaultPaymentController = async (req, res) => {
+  try {
+    const { userId, paymentId } = req.body;
+
+    if (!userId || !paymentId) {
+      return res.status(400).json({
+        success: false,
+        message: "User ID and Payment ID are required",
+      });
+    }
+
+    const customer = await Customer.findOne({ userId });
+
+    if (!customer) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    customer.payments.forEach((payment) => {
+      payment.isDefault = payment._id.toString() === paymentId;
+    });
+
+    await customer.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Default payment method updated successfully",
+      data: customer,
+    });
+  } catch (error) {
+    console.error("Error setting default payment method:", error);
+    return res.status(500).json({
+      success: false,
+      message: "An error occurred while updating the default payment method",
+      error: error.message,
+    });
+  }
+};
+
 const userProfileDataController = async (req, res) => {
   const { userId } = req.params;
   try {
@@ -238,7 +548,7 @@ const userProfileDataController = async (req, res) => {
       success: true,
       message: "User Data Fetched Successfully",
       data: {
-        user
+        user,
       },
     });
   } catch (error) {
@@ -254,6 +564,12 @@ module.exports = {
   userData,
   userProfileController,
   userAddressController,
+  userAddressUpdateController,
+  userAddressDeleteController,
+  setDefaultAddressController,
   userPaymentsController,
+  userPaymentUpdateController,
+  userPaymentDeleteController,
+  setDefaultPaymentController,
   userProfileDataController,
 };

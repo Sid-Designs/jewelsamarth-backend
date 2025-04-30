@@ -28,7 +28,7 @@ const Customer = new Schema({
     type: String,
     enum: ["Men", "Women", "Other"],
   },
-  birthDate:{
+  birthDate: {
     type: Date,
   },
   address: [
@@ -39,17 +39,25 @@ const Customer = new Schema({
       userAddress: {
         type: String,
       },
+      isDefault: {
+        type: Boolean,
+        default: false,
+      },
     },
   ],
-  payments:[
+  payments: [
     {
-      paymentMethod:{
-            type: String,
-        },
-        paymentDetails:{
-            type: String,
-        }
-    }
+      paymentMethod: {
+        type: String,
+      },
+      paymentDetails: {
+        type: String,
+      },
+      isDefault: {
+        type: Boolean,
+        default: false,
+      },
+    },
   ],
   state: {
     type: String,
