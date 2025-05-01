@@ -16,7 +16,7 @@ server.use(
   cors({
     origin: [
       "http://localhost:5173",
-      "https://shop.jewelsamarth.in/",
+      "https://shop.jewelsamarth.in",
       "https://jewelsamarth-frontend.vercel.app",
     ],
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
