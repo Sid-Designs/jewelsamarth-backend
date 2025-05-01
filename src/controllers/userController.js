@@ -560,6 +560,24 @@ const userProfileDataController = async (req, res) => {
   }
 };
 
+const userDetailsController = async (req, res) => {
+  try {
+    const {userId} = req.params;
+    const user = await User.findById(userId);
+    res.json({
+      success: true,
+      message: "User Found",
+      name: user.username
+    })
+  } catch (error) {
+    res.json({
+      success: false,
+      message: "Error Occured While Fetching User Data",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   userData,
   userProfileController,
@@ -572,4 +590,5 @@ module.exports = {
   userPaymentDeleteController,
   setDefaultPaymentController,
   userProfileDataController,
+  userDetailsController,
 };

@@ -13,6 +13,7 @@ const {
   userPaymentDeleteController,
   setDefaultPaymentController,
   userProfileDataController,
+  userDetailsController
 } = require("../controllers/userController");
 
 router.get("/data", userAuth, userData);
@@ -26,5 +27,6 @@ router.put("/payment-update", userPaymentUpdateController);
 router.delete("/payment-delete", userPaymentDeleteController);
 router.put("/set-default-payment", setDefaultPaymentController);
 router.get("/profile-data/:userId", userProfileDataController);
+router.get("/:userId", userDetailsController);
 
 module.exports = router;

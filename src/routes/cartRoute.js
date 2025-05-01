@@ -8,6 +8,7 @@ const {
   removeCartController,
   getcartController,
   allcartController,
+  getCartTotalController
 } = require("../controllers/cartController");
 
 router.post("/add", addtocartController);
@@ -16,6 +17,7 @@ router.post("/qtyminus/:productId", qtyMinusController);
 router.delete("/remove/:productId", removeCartController);
 router.post("/get", getcartController);
 router.get("/getall", checkAdmin, allcartController);
+router.get("/total/:userId", getCartTotalController);
 
 
 module.exports = router;

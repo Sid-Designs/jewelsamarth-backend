@@ -11,7 +11,6 @@ const reviewSchema = new Schema(
     orderId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Order",
-      required: true,
     },
     productId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -20,11 +19,9 @@ const reviewSchema = new Schema(
     },
     name: {
       type: String,
-      required: true,
     },
     email: {
       type: String,
-      required: true,
     },
     review: {
       type: String,

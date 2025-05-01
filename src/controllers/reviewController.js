@@ -1,62 +1,43 @@
 const Review = require("../models/reviewModel");
-const User = require("../models/userModel");
 const Product = require("../models/productModel");
-const Order = require("../models/orderModel");
+const User = require("../models/userModel");
 
+// Add Review
 const addReviewController = async (req, res) => {
   try {
-    const { userId, orderId, productId, name, email, review, rating } =
-      req.body;
+    const { userId, productId, review, rating } = req.body;
 
-    if (
-      !userId ||
-      !orderId ||
-      !productId ||
-      !name ||
-      !email ||
-      !review ||
-      !rating
-    ) {
+    // Validate input
+    if (!userId || !productId || !review || !rating) {
       return res.status(400).json({
         success: false,
         message: "All fields are required.",
       });
     }
 
-    const existingUser = await User.findById(userId);
-    if (!existingUser) {
-      return res.status(404).json({
+    // Check if user and product exist
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ success: false, message: "User not found." });
+
+    const product = await Product.findById(productId);
+    if (!product) return res.status(404).json({ success: false, message: "Product not found." });
+
+    // Check if user has already reviewed this product
+    const existingReview = await Review.findOne({ userId, productId });
+    if (existingReview) {
+      return res.status(400).json({
         success: false,
-        message: "User not found.",
+        message: "You have already reviewed this product.",
       });
     }
 
-    const existingOrder = await Order.findById(orderId);
-    if (!existingOrder) {
-      return res.status(404).json({
-        success: false,
-        message: "Order not found.",
-      });
-    }
-
-    const existingProduct = await Product.findById(productId);
-    if (!existingProduct) {
-      return res.status(404).json({
-        success: false,
-        message: "Product not found.",
-      });
-    }
-
-    const newReview = new Review({
-      userId,
-      orderId,
-      productId,
-      name,
-      email,
-      review,
-      rating,
-    });
+    // Create and save review
+    const newReview = new Review({ userId, productId, review, rating });
     await newReview.save();
+
+    // Add review to product
+    product.reviews.push(newReview._id);
+    await product.save();
 
     return res.status(201).json({
       success: true,
@@ -72,29 +53,46 @@ const addReviewController = async (req, res) => {
   }
 };
 
-const updateReviewController = async (req, res) => {
+// Get All Reviews for a Product
+const getAllReviewsForProductController = async (req, res) => {
   try {
-    const { userId, orderId, productId, review, rating } = req.body;
+    const { productId } = req.params;
 
-    // Validate required fields
-    if (!userId || !orderId || !productId || !review || !rating) {
-      return res.status(400).json({
+    const product = await Product.findById(productId).populate("reviews");
+    if (!product) {
+      return res.status(404).json({
         success: false,
-        message: "All fields are required.",
+        message: "Product not found.",
       });
     }
 
-    // Check if the review exists and belongs to the provided orderId
-    const existingReview = await Review.findOne({ userId, productId, orderId });
+    return res.status(200).json({
+      success: true,
+      message: "Reviews fetched successfully.",
+      reviews: product.reviews,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "An error occurred while fetching reviews.",
+      error: error.message,
+    });
+  }
+};
+
+// Update Review
+const updateReviewController = async (req, res) => {
+  try {
+    const { userId, productId, review, rating } = req.body;
+
+    const existingReview = await Review.findOne({ userId, productId });
     if (!existingReview) {
       return res.status(404).json({
         success: false,
-        message:
-          "Review not found for the given user, product, and order. Please ensure the correct details.",
+        message: "Review not found.",
       });
     }
 
-    // Update the review
     existingReview.review = review;
     existingReview.rating = rating;
     await existingReview.save();
@@ -102,7 +100,7 @@ const updateReviewController = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Review updated successfully.",
-      updatedReview: existingReview,
+      review: existingReview,
     });
   } catch (error) {
     return res.status(500).json({
@@ -113,47 +111,30 @@ const updateReviewController = async (req, res) => {
   }
 };
 
+// Delete Review
 const deleteReviewController = async (req, res) => {
   try {
     const { userId, reviewId } = req.body;
 
-    // Validate required fields
-    if (!userId || !reviewId) {
-      return res.status(400).json({
-        success: false,
-        message: "User ID and Review ID are required.",
-      });
-    }
-
-    // Check if the user exists and fetch the admin status
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found.",
-      });
-    }
-
-    // Check if the review exists
-    const existingReview = await Review.findById(reviewId); // `_id` directly matches `reviewId`
-    if (!existingReview) {
+    const review = await Review.findById(reviewId);
+    if (!review) {
       return res.status(404).json({
         success: false,
         message: "Review not found.",
       });
     }
 
-    // Verify if the user is authorized to delete the review
-    if (existingReview.userId.toString() !== userId && !user.isAdmin) {
+    if (review.userId.toString() !== userId) {
       return res.status(403).json({
         success: false,
-        message:
-          "Unauthorized access. Only the review owner or an admin can delete this review.",
+        message: "Unauthorized to delete this review.",
       });
     }
 
-    // Delete the review
     await Review.findByIdAndDelete(reviewId);
+    await Product.findByIdAndUpdate(review.productId, {
+      $pull: { reviews: reviewId },
+    });
 
     return res.status(200).json({
       success: true,
@@ -170,6 +151,7 @@ const deleteReviewController = async (req, res) => {
 
 module.exports = {
   addReviewController,
+  getAllReviewsForProductController,
   updateReviewController,
   deleteReviewController,
 };

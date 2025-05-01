@@ -93,13 +93,25 @@ const qtyPlusController = async (req, res) => {
       (item) => item.productId.toString() === productId
     );
     if (productIndex === -1) {
-      return res.status(404).json({ success: false, message: "Product not found in cart" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Product not found in cart" });
     }
     cart.items[productIndex].quantity += 1;
     await cart.save();
-    res.json({ success: true, message: "Quantity increased successfully", cart });
+    res.json({
+      success: true,
+      message: "Quantity increased successfully",
+      cart,
+    });
   } catch (err) {
-    res.status(500).json({ success: false, message: "Error occurred while updating quantity", error: err.message });
+    res
+      .status(500)
+      .json({
+        success: false,
+        message: "Error occurred while updating quantity",
+        error: err.message,
+      });
   }
 };
 
@@ -116,7 +128,9 @@ const qtyMinusController = async (req, res) => {
       (item) => item.productId.toString() === productId
     );
     if (productIndex === -1) {
-      return res.status(404).json({ success: false, message: "Product not found in cart" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Product not found in cart" });
     }
     if (cart.items[productIndex].quantity > 1) {
       cart.items[productIndex].quantity -= 1;
@@ -125,9 +139,19 @@ const qtyMinusController = async (req, res) => {
       cart.items.splice(productIndex, 1);
       await cart.save();
     }
-    res.json({ success: true, message: "Quantity decreased successfully", cart });
+    res.json({
+      success: true,
+      message: "Quantity decreased successfully",
+      cart,
+    });
   } catch (err) {
-    res.status(500).json({ success: false, message: "Error occurred while updating quantity", error: err.message });
+    res
+      .status(500)
+      .json({
+        success: false,
+        message: "Error occurred while updating quantity",
+        error: err.message,
+      });
   }
 };
 
@@ -176,6 +200,21 @@ const allcartController = async (req, res) => {
   }
 };
 
+const getCartTotalController = async (req, res) => {
+  try {
+    const {userId} = req.params;
+    const carts = await Cart.findOne({userId});
+    const totalItems = carts.items.length;
+    res.status(200).json({ success: true, total: totalItems });
+  } catch (e) {
+    res.status(500).json({
+      success: false,
+      message: "Error occurred while adding product to cart",
+      error: e.message,
+    });
+  }
+};
+
 module.exports = {
   addtocartController,
   qtyPlusController,
@@ -183,4 +222,5 @@ module.exports = {
   removeCartController,
   getcartController,
   allcartController,
+  getCartTotalController,
 };

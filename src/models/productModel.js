@@ -48,6 +48,7 @@ const productSchema = new Schema(
     ],
     images: [{ type: String }],
     subImages: [{ type: String }],
+    reviews: [{ type: mongoose.Schema.Types.ObjectId, ref: "Review" }],
   },
   { timestamps: true }
 );
