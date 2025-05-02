@@ -99,13 +99,13 @@ const getProductByCategoryController = async (req, res) => {
 
     // Check for products by category
     let products = await Product.find({
-      productCategory: { $regex: `^${productCategory}$`, $options: "i" }
+      productCategory: { $regex: `^${productCategory}$`, $options: "i" },
     });
 
     // If no products found by category, check by gender
     if (products.length === 0) {
       products = await Product.find({
-        gender: { $regex: `^${productCategory}$`, $options: "i" }
+        gender: { $regex: `^${productCategory}$`, $options: "i" },
       });
     }
 
@@ -131,31 +131,65 @@ const getProductByCategoryController = async (req, res) => {
 
 const getProductBySearchController = async (req, res) => {
   const query = req.query.q;
-  try{
+  try {
     const result = await Product.find({
-      $or:[
-        {name: {$regex: query, $options: 'i'}},
-        {productTags: {$regex: query, $options: 'i'}},
-        {productCategory: {$regex: query, $options: 'i'}},
-      ]
-    }).select("name productTags productCategory regprice saleprice description images subImages createdAt")
+      $or: [
+        { name: { $regex: query, $options: "i" } },
+        { productTags: { $regex: query, $options: "i" } },
+        { productCategory: { $regex: query, $options: "i" } },
+      ],
+    }).select(
+      "name productTags productCategory regprice saleprice description images subImages createdAt"
+    );
     res.json({
       success: true,
       products: result,
     });
-  }catch(e){
+  } catch (e) {
     res.json({
       success: false,
       message: "Error Occured While Fetching Products",
       error: e.message,
     });
   }
-}
+};
+
+const updateProductController = async (req, res) => {
+  try {
+    const {productId} = req.params;
+    const updateData = req.body;
+
+    const updatedProduct = await Product.findByIdAndUpdate(
+      {_id:productId},
+      { $set: updateData },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedProduct) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Product not found." });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Product updated successfully.",
+      product: updatedProduct,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error occurred while updating product.",
+      error: error.message,
+    });
+  }
+};
 
 module.exports = {
   addProductController,
   getAllProductsController,
   getProductByIdController,
   getProductByCategoryController,
-  getProductBySearchController
+  getProductBySearchController,
+  updateProductController,
 };

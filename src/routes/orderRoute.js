@@ -8,6 +8,8 @@ const {
   getOrderDetailsController,
   getAllOrdersController,
   getAllOrderDetailsController,
+  changeOrderStatus,
+  deleteOrderController
 } = require("../controllers/orderController");
 
 router.post("/checkout", createOrderController);
@@ -16,5 +18,7 @@ router.post("/coupon/apply", couponController);
 router.post("/details/:orderId", getOrderDetailsController);
 router.get("/all", checkAdmin, getAllOrdersController);
 router.post("/details", getAllOrderDetailsController);
+router.post("/change-status",checkAdmin, changeOrderStatus);
+router.delete("/delete/:orderId", checkAdmin, deleteOrderController);
 
 module.exports = router;

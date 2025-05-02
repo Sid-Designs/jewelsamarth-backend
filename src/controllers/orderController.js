@@ -148,7 +148,7 @@ const verifyPaymentController = async (req, res) => {
 const couponController = async (req, res) => {
   try {
     const { couponCode } = req.body;
-    
+
     const coupon = await Coupon.findOne({ code: couponCode });
 
     if (!coupon) {
@@ -169,8 +169,8 @@ const couponController = async (req, res) => {
   }
 };
 
-const getOrderDetailsController = async (req, res) =>{
-  try{
+const getOrderDetailsController = async (req, res) => {
+  try {
     const { orderId } = req.params;
     const order = await Order.findById(orderId);
     if (!order) {
@@ -183,14 +183,14 @@ const getOrderDetailsController = async (req, res) =>{
       success: true,
       order,
     });
-  }catch(e){
+  } catch (e) {
     res.json({
       success: false,
       message: "Error Occured While Fetching Order Details",
       error: e.message,
     });
   }
-}
+};
 
 const getAllOrdersController = async (req, res) => {
   try {
@@ -209,8 +209,8 @@ const getAllOrdersController = async (req, res) => {
 
 const getAllOrderDetailsController = async (req, res) => {
   try {
-    const {userId} = req.body;
-    const orders = await Order.find({userId});
+    const { userId } = req.body;
+    const orders = await Order.find({ userId });
     res.json({
       success: true,
       orders,
@@ -222,7 +222,43 @@ const getAllOrderDetailsController = async (req, res) => {
       error: e.message,
     });
   }
-}
+};
+
+const changeOrderStatus = async (req, res) => {
+  try {
+    const { orderId, status } = req.body;
+    const order = await Order.findById(orderId);
+    order.status = status;
+    await order.save();
+    res.json({
+      success: true,
+      message: `Order is ${status}`,
+    });
+  } catch (e) {
+    res.json({
+      success: false,
+      message: "Error Occured While Fetching All Orders",
+      error: e.message,
+    });
+  }
+};
+
+const deleteOrderController = async (req, res) => {
+  try {
+    const {orderId} = req.params;
+    const order = await Order.findByIdAndDelete(orderId);
+    res.json({
+      success: true,
+      message: "Order Delete Successfully"
+    })
+  } catch (e) {
+    res.json({
+      success: false,
+      message: "Error Occured While Fetching All Orders",
+      error: e.message,
+    });
+  }
+};
 
 module.exports = {
   createOrderController,
@@ -230,5 +266,7 @@ module.exports = {
   couponController,
   getAllOrdersController,
   getOrderDetailsController,
-  getAllOrderDetailsController
+  getAllOrderDetailsController,
+  changeOrderStatus,
+  deleteOrderController,
 };
