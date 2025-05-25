@@ -185,6 +185,46 @@ const updateProductController = async (req, res) => {
   }
 };
 
+const productStockController = async (req, res) => {
+  try {
+    const { productId, stock } = req.body;
+
+    // Validate input
+    if (!productId || stock === undefined) {
+      return res.status(400).json({
+        success: false,
+        message: "Product ID and stock are required.",
+      });
+    }
+
+    // Find the product and update its stock
+    const updatedProduct = await Product.findByIdAndUpdate(
+      productId,
+      { stock: stock },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedProduct) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found.",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Product stock updated successfully.",
+      product: updatedProduct,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error occurred while updating product stock.",
+      error: error.message,
+    });
+  }
+}
+
 module.exports = {
   addProductController,
   getAllProductsController,
@@ -192,4 +232,5 @@ module.exports = {
   getProductByCategoryController,
   getProductBySearchController,
   updateProductController,
+  productStockController
 };

@@ -6,7 +6,8 @@ const {
   getProductByIdController,
   getProductByCategoryController,
   getProductBySearchController,
-  updateProductController
+  updateProductController,
+  productStockController
 } = require("../controllers/productController");
 const checkAdmin = require("../middlewares/checkAdmin");
 
@@ -16,5 +17,6 @@ router.get("/all", getAllProductsController);
 router.get("/:id", getProductByIdController);
 router.get("/category/:category", getProductByCategoryController);
 router.put("/update/:productId", checkAdmin, updateProductController)
+router.put("/stock", checkAdmin, productStockController);
 
 module.exports = router;
