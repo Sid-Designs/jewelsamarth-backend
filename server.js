@@ -17,6 +17,7 @@ server.use(
     origin: [
       "http://localhost:5173",
       "https://shop.jewelsamarth.in",
+      "https://jewelsamarth.in",
       "https://www.jewelsamarth.in",
       "https://jewelsamarth-frontend.vercel.app",
     ],
@@ -34,7 +35,7 @@ server.use("/api/order", require("./src/routes/orderRoute"));
 server.use("/api/pincode", require("./src/routes/pincodeRoute"));
 server.use("/api/subscribe", require("./src/routes/subscribeRoute"));
 server.use("/api/review", require("./src/routes/reviewRoute"));
-server.use("/api/wishlist", require("./src/routes/wishlistRoute"));
+server.use("/api/wishlist", require("./src/routes/whislistRoute"));
 
 // Home Routes
 server.get("/", (req, res) => {
