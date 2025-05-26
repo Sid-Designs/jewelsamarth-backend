@@ -6,6 +6,14 @@ const addtocartController = async (req, res) => {
   try {
     const { productId, quantity, userId } = req.body;
 
+    // Validate the requested quantity
+    if (quantity <= 0 || quantity > 10) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Quantity must be between 1 and 10 per product" 
+      });
+    }
+
     const user = await User.findById(userId);
     const product = await Product.findById(productId);
     if (!user || !product) {
@@ -22,8 +30,17 @@ const addtocartController = async (req, res) => {
     const productIndex = cart.items.findIndex(
       (item) => item.productId.toString() === productId
     );
+
     if (productIndex > -1) {
-      cart.items[productIndex].quantity += quantity;
+      // Check if adding the quantity would exceed the limit of 10
+      const newQuantity = cart.items[productIndex].quantity + quantity;
+      if (newQuantity > 10) {
+        return res.status(400).json({
+          success: false,
+          message: "Maximum quantity limit of 10 per product reached"
+        });
+      }
+      cart.items[productIndex].quantity = newQuantity;
     } else {
       cart.items.push({ productId, quantity });
     }
