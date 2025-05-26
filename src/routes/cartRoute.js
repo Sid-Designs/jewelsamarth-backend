@@ -3,6 +3,7 @@ const router = express.Router();
 const checkAdmin = require("../middlewares/checkAdmin");
 const {
   addtocartController,
+  buyNowController,
   qtyPlusController,
   qtyMinusController,
   removeCartController,
@@ -18,6 +19,7 @@ router.delete("/remove/:productId", removeCartController);
 router.post("/get", getcartController);
 router.get("/getall", checkAdmin, allcartController);
 router.get("/total/:userId", getCartTotalController);
+router.post("/buy-now", buyNowController);
 
 
 module.exports = router;

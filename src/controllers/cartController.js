@@ -58,6 +58,70 @@ const addtocartController = async (req, res) => {
   }
 };
 
+const buyNowController = async (req, res) => {
+  try {
+    const { productId, quantity, userId } = req.body;
+
+    // Basic validation
+    if (!productId || !quantity || !userId) {
+      return res.status(400).json({
+        success: false,
+        message: "Product ID, quantity and user ID are required"
+      });
+    }
+
+    // Quantity validation (1-5)
+    if (quantity < 1 || quantity > 5) {
+      return res.status(400).json({
+        success: false,
+        message: "Quantity must be between 1 and 5"
+      });
+    }
+
+    // Check product exists
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found"
+      });
+    }
+
+    // Check stock availability
+    if (product.stock < quantity) {
+      return res.status(400).json({
+        success: false,
+        message: "Insufficient stock available"
+      });
+    }
+
+    // Delete existing cart
+    await Cart.deleteOne({ userId });
+
+    // Create new cart with only this product
+    const newCart = await Cart.create({
+      userId,
+      items: [{ productId, quantity }],
+    });
+
+    // Successful response with redirect info
+    res.status(200).json({
+      success: true,
+      message: "Product ready for checkout",
+      redirectTo: "/checkout", // Frontend will handle redirect
+      cart: newCart
+    });
+
+  } catch (error) {
+    console.error("Buy Now Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to process Buy Now request",
+      error: error.message
+    });
+  }
+};
+
 const removeCartController = async (req, res) => {
   const { productId } = req.params;
   const { userId } = req.body;
@@ -248,4 +312,5 @@ module.exports = {
   getcartController,
   allcartController,
   getCartTotalController,
+  buyNowController
 };
