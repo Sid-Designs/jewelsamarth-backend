@@ -6,11 +6,11 @@ const addtocartController = async (req, res) => {
   try {
     const { productId, quantity, userId } = req.body;
 
-    // Validate the requested quantity
-    if (quantity <= 0 || quantity > 10) {
+    // Validate the requested quantity (1-5)
+    if (quantity <= 0 || quantity > 5) {
       return res.status(400).json({ 
         success: false, 
-        message: "Quantity must be between 1 and 10 per product" 
+        message: "Quantity must be between 1 and 5 per product" 
       });
     }
 
@@ -32,12 +32,12 @@ const addtocartController = async (req, res) => {
     );
 
     if (productIndex > -1) {
-      // Check if adding the quantity would exceed the limit of 10
+      // Check if adding the quantity would exceed the limit of 5
       const newQuantity = cart.items[productIndex].quantity + quantity;
-      if (newQuantity > 10) {
+      if (newQuantity > 5) {
         return res.status(400).json({
           success: false,
-          message: "Maximum quantity limit of 10 per product reached"
+          message: "Maximum quantity limit of 5 per product reached"
         });
       }
       cart.items[productIndex].quantity = newQuantity;
@@ -114,6 +114,15 @@ const qtyPlusController = async (req, res) => {
         .status(404)
         .json({ success: false, message: "Product not found in cart" });
     }
+
+    // Check if increasing quantity exceeds the limit (5)
+    if (cart.items[productIndex].quantity >= 5) {
+      return res.status(400).json({
+        success: false,
+        message: "Maximum quantity limit of 5 per product reached",
+      });
+    }
+
     cart.items[productIndex].quantity += 1;
     await cart.save();
     res.json({
@@ -122,13 +131,11 @@ const qtyPlusController = async (req, res) => {
       cart,
     });
   } catch (err) {
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: "Error occurred while updating quantity",
-        error: err.message,
-      });
+    res.status(500).json({
+      success: false,
+      message: "Error occurred while updating quantity",
+      error: err.message,
+    });
   }
 };
 
@@ -162,13 +169,11 @@ const qtyMinusController = async (req, res) => {
       cart,
     });
   } catch (err) {
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: "Error occurred while updating quantity",
-        error: err.message,
-      });
+    res.status(500).json({
+      success: false,
+      message: "Error occurred while updating quantity",
+      error: err.message,
+    });
   }
 };
 
@@ -184,10 +189,10 @@ const getcartController = async (req, res) => {
     }
     const productDetails = await Promise.all(
       cart.items.map(async (item) => {
-        const product = await Product.findById(item.productId); // Find product by its ID
+        const product = await Product.findById(item.productId);
         return {
-          ...product._doc, // Spread product details
-          quantity: item.quantity, // Add quantity from the cart
+          ...product._doc,
+          quantity: item.quantity,
         };
       })
     );
@@ -219,14 +224,17 @@ const allcartController = async (req, res) => {
 
 const getCartTotalController = async (req, res) => {
   try {
-    const {userId} = req.params;
-    const carts = await Cart.findOne({userId});
-    const totalItems = carts.items.length;
+    const { userId } = req.params;
+    const cart = await Cart.findOne({ userId });
+    if (!cart) {
+      return res.status(404).json({ success: false, message: "Cart not found" });
+    }
+    const totalItems = cart.items.length;
     res.status(200).json({ success: true, total: totalItems });
   } catch (e) {
     res.status(500).json({
       success: false,
-      message: "Error occurred while adding product to cart",
+      message: "Error occurred while fetching cart total",
       error: e.message,
     });
   }
