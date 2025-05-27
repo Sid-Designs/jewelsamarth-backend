@@ -21,7 +21,7 @@ const emailTemplates = {
           img { -ms-interpolation-mode: bicubic; border: 0; height: auto; line-height: 100%; outline: none; text-decoration: none; }
           
           /* Reset styles */
-          body { margin: 0 !important; padding: 0 !important; width: 100% !important; }
+          body { margin: 0 !important; padding: 0 !important; width: 100% !important; margin-top: 10px!important; margin-bottom: 10px!important;}
           
           /* iOS BLUE LINKS */
           a[x-apple-data-detectors] {
@@ -247,7 +247,7 @@ const emailTemplates = {
           img { -ms-interpolation-mode: bicubic; border: 0; height: auto; line-height: 100%; outline: none; text-decoration: none; }
           
           /* Reset styles */
-          body { margin: 0 !important; padding: 0 !important; width: 100% !important; }
+          body { margin: 0 !important; padding: 0 !important; width: 100% !important; margin-top: 10px!important; margin-bottom: 10px!important; }
           
           /* iOS BLUE LINKS */
           a[x-apple-data-detectors] {
