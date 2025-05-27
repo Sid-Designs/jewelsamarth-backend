@@ -35,7 +35,7 @@ server.use("/api/order", require("./src/routes/orderRoute"));
 server.use("/api/pincode", require("./src/routes/pincodeRoute"));
 server.use("/api/subscribe", require("./src/routes/subscribeRoute"));
 server.use("/api/review", require("./src/routes/reviewRoute"));
-server.use("/api/wishlist", require("./src/routes/whislistRoute"));
+server.use("/api/wishlist", require("./src/routes/wishlistRoute"));
 
 // Home Routes
 server.get("/", (req, res) => {

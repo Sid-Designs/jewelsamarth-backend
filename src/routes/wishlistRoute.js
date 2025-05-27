@@ -1,6 +1,6 @@
 const express = require("express");
-const Wishlist = require("../models/whislistModel");
-const {addToWishlist, getWishlist, removeFromWishlist, clearWishlist} = require("../controllers/whislistController");
+const Wishlist = require("../models/wishlistModel");
+const {addToWishlist, getWishlist, removeFromWishlist, clearWishlist} = require("../controllers/wishlistController");
 const router = express.Router();
 
 // Add item to wishlist
