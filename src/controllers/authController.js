@@ -122,32 +122,65 @@ const logoutController = async (req, res) => {
 const sendVerifyOtpController = async (req, res) => {
   try {
     const { userId } = req.body;
-    const user = await User.findById(userId);
-    if (user.isAccountVerified) {
-      return res.json({ success: false, message: "User Not Found" });
+    if (!userId) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "User ID is required" 
+      });
     }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "User not found" 
+      });
+    }
+
+    if (user.isAccountVerified) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Account is already verified" 
+      });
+    }
+
     const otp = String(Math.floor(100000 + Math.random() * 900000));
     user.verifyOtp = otp;
-    user.verifyOtpExpireAt = Date.now() + 5 * 60 * 1000;
+    user.verifyOtpExpireAt = Date.now() + 5 * 60 * 1000; // 5 minutes
     await user.save();
 
-    // Send OTP email
-    await transporter.sendMail({
-      from: `"Jewel Samarth" <${process.env.SMTP_NO_REPLY_SENDER_EMAIL}>`,
-      to: user.email,
-      subject: "🔐 Verify Your Jewel Samarth Account",
-      html: emailTemplates.otp(user.username, otp),
-      text: `Your Jewel Samarth verification code is: ${otp}\n\nThis code will expire in 10 minutes. Please enter it on our website to verify your account.\n\nIf you didn't request this code, please contact our support team immediately.`,
-    });
+    console.log(`Generated OTP for ${user.email}: ${otp}`);
 
-    return res.json({
-      success: true,
-      message: "Verification OTP Sent Successfully",
-    });
+    try {
+      await transporter.sendMail({
+        from: `"Jewel Samarth" <${process.env.SMTP_NO_REPLY_SENDER_EMAIL}>`,
+        to: user.email,
+        subject: "🔐 Verify Your Jewel Samarth Account",
+        html: emailTemplates.otp(user.username, otp),
+        text: `Your verification code is: ${otp}\nExpires in 5 minutes.`,
+      });
+
+      return res.json({
+        success: true,
+        message: "Verification OTP sent successfully",
+      });
+    } catch (emailError) {
+      console.error("Failed to send OTP email:", emailError);
+      // Optionally: clear the OTP if email fails
+      user.verifyOtp = "";
+      user.verifyOtpExpireAt = 0;
+      await user.save();
+
+      return res.status(500).json({
+        success: false,
+        message: "Failed to send OTP email",
+      });
+    }
   } catch (error) {
-    res.json({
+    console.error("Error in sendVerifyOtpController:", error);
+    return res.status(500).json({
       success: false,
-      message: "Error Occurred While Sending OTP",
+      message: "Internal server error",
       error: error.message,
     });
   }
