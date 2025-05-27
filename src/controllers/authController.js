@@ -63,6 +63,7 @@ const registerController = async (req, res) => {
         isAccountVerified: newUser.isAccountVerified || false, // Assuming this field exists
       },
     });
+
   } catch (error) {
     console.error("Error during registration:", error.message);
     return res.status(500).json({
@@ -135,53 +136,10 @@ const sendVerifyOtpController = async (req, res) => {
     const mailOptions = {
       from: process.env.SMTP_NO_REPLY_SENDER_EMAIL,
       to: user.email,
-      subject: "Your Jewel Samarth Verification Code",
-      text: `Your Jewel Samarth verification code is: ${otp}\n\nThis code will expire in 10 minutes.`,
-      html: `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="UTF-8">
-      <style>
-        body { font-family: 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
-        .header { text-align: center; padding: 20px 0; }
-        .logo { max-width: 180px; }
-        .content { background-color: #f9f9f9; padding: 30px; border-radius: 8px; }
-        .otp-container { background: #ffffff; border: 1px dashed #d1d5db; padding: 20px; margin: 25px 0; text-align: center; }
-        .otp-code { font-size: 28px; letter-spacing: 3px; color: #111827; font-weight: bold; }
-        .footer { text-align: center; margin-top: 30px; font-size: 12px; color: #6b7280; }
-        .button { background-color: #b38b59; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: bold; }
-      </style>
-    </head>
-    <body>
-      <div class="header">
-        <img src="https://jewelsamarth.in/logo.png" alt="Jewel Samarth" class="logo">
-      </div>
-      
-      <div class="content">
-        <h2 style="color: #111827;">Hello ${
-          user.name || "Valued Customer"
-        },</h2>
-        <p>Thank you for choosing Jewel Samarth! Please use the following One-Time Password (OTP) to verify your account:</p>
-        
-        <div class="otp-container">
-          <div class="otp-code">${otp}</div>
-        </div>
-        
-        <p style="margin-bottom: 25px;">This code will expire in <strong>10 minutes</strong>. Please do not share this code with anyone.</p>
-        
-        <p>If you didn't request this code, you can safely ignore this email.</p>
-      </div>
-      
-      <div class="footer">
-        <p>© ${new Date().getFullYear()} Jewel Samarth. All rights reserved.</p>
-        <p>Jewel Samarth, Mumbai, India</p>
-      </div>
-    </body>
-    </html>
-  `,
+      subject: "Account Verification OTP",
+      text: "Hello, welcome to Jewel Samarth! We are send 6 Digit OTP.",
+      html: `<h1>email</h1><br><h2>Your OTP is: ${otp}</h2>`,
     };
-    
     await transporter.sendMail(mailOptions);
     return res.json({
       success: true,
