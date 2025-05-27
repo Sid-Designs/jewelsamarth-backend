@@ -37,7 +37,7 @@ const emailTemplates = {
           body {
             font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
             color: #333333;
-            background-color: #f7f7f7;
+            box-shadow: 0 0 1px 0 rgba(0, 0, 0, 0.15), 0 6px 12px 0 rgba(0, 0, 0, 0.15);
           }
           
           .outer-table {
@@ -161,7 +161,7 @@ const emailTemplates = {
           }
         </style>
       </head>
-      <body style="margin: 0; padding: 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333333; background-color: #f7f7f7;">
+      <body style="margin: 0; padding: 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333333; box-shadow: 0 0 1px 0 rgba(0, 0, 0, 0.15), 0 6px 12px 0 rgba(0, 0, 0, 0.15);">
         <table class="outer-table" border="0" cellpadding="0" cellspacing="0" width="100%">
           <tr>
             <td align="center" valign="top">
@@ -247,7 +247,7 @@ const emailTemplates = {
           img { -ms-interpolation-mode: bicubic; border: 0; height: auto; line-height: 100%; outline: none; text-decoration: none; }
           
           /* Reset styles */
-          body { margin: 0 !important; padding: 0 !important; width: 100% !important; margin-top: 10px!important; margin-bottom: 10px!important; }
+          body { margin: 0 !important; padding: 0 !important; width: 100% !important; margin-top: 10px!important; margin-bottom: 10px!important; box-shadow: 0 0 1px 0 rgba(0, 0, 0, 0.15), 0 6px 12px 0 rgba(0, 0, 0, 0.15);}
           
           /* iOS BLUE LINKS */
           a[x-apple-data-detectors] {
@@ -263,7 +263,7 @@ const emailTemplates = {
           body {
             font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
             color: #333333;
-            background-color: #f7f7f7;
+            box-shadow: 0 0 1px 0 rgba(0, 0, 0, 0.15), 0 6px 12px 0 rgba(0, 0, 0, 0.15);
           }
           
           .outer-table {
@@ -398,7 +398,7 @@ const emailTemplates = {
           }
         </style>
       </head>
-      <body style="margin: 0; padding: 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333333; background-color: #f7f7f7;">
+      <body style="margin: 0; padding: 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333333;">
         <table class="outer-table" border="0" cellpadding="0" cellspacing="0" width="100%">
           <tr>
             <td align="center" valign="top">
