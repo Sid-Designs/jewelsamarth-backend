@@ -3,13 +3,14 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const transporter = require("../config/nodeMailer");
 
-// Email Templates
+// Modern Email Templates
 const emailTemplates = {
   welcome: (username) => `
     <!DOCTYPE html>
     <html>
     <head>
       <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <style>
         :root {
           --primary: #fecc32;
@@ -17,51 +18,118 @@ const emailTemplates = {
           --text: #333333;
           --light-bg: #f8f9fa;
           --white: #ffffff;
+          --gray: #6b7280;
         }
         body {
-          font-family: 'Helvetica Neue', Arial, sans-serif;
+          font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
           line-height: 1.6;
           color: var(--text);
           max-width: 600px;
           margin: 0 auto;
-          padding: 0;
+          background-color: var(--light-bg);
+          padding: 20px;
         }
         .email-container {
-          background: var(--white);
+          background: linear-gradient(135deg, var(--white) 0%, #fafbfc 100%);
           border-radius: 20px;
           overflow: hidden;
-          box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+          box-shadow: 0 20px 40px rgba(6, 6, 117, 0.1), 0 1px 3px rgba(0,0,0,0.05);
         }
         .header {
-          background: var(--secondary);
-          padding: 30px;
+          background: linear-gradient(135deg, var(--secondary) 0%, #0a0a8a 100%);
+          padding: 40px 30px;
           text-align: center;
+          position: relative;
+        }
+        .header::before {
+          content: '';
+          position: absolute;
+          top: 10px;
+          right: 20px;
+          width: 60px;
+          height: 60px;
+          background: var(--primary);
+          border-radius: 50%;
+          opacity: 0.1;
+        }
+        .header::after {
+          content: '';
+          position: absolute;
+          bottom: 15px;
+          left: 30px;
+          width: 30px;
+          height: 30px;
+          background: var(--primary);
+          border-radius: 50%;
+          opacity: 0.15;
         }
         .logo {
           max-width: 180px;
+          height: auto;
+          filter: brightness(0) invert(1);
         }
         .content {
+          padding: 40px 30px;
+        }
+        .welcome-box {
+          background: linear-gradient(135deg, rgba(254, 204, 50, 0.15) 0%, rgba(254, 204, 50, 0.05) 100%);
+          border-radius: 20px;
           padding: 30px;
+          margin-bottom: 30px;
+          border: 2px solid rgba(254, 204, 50, 0.2);
         }
         h1 {
           color: var(--secondary);
-          margin-top: 0;
+          margin: 0 0 20px 0;
+          font-size: 28px;
+          font-weight: 700;
+          text-align: center;
+        }
+        .username {
+          color: var(--secondary);
+          font-weight: 600;
         }
         .cta-button {
           display: inline-block;
-          background: var(--primary);
-          color: var(--secondary);
-          padding: 12px 30px;
+          background: linear-gradient(135deg, var(--primary) 0%, #ffd700 100%);
+          color: var(--secondary) !important;
+          padding: 16px 40px;
           text-decoration: none;
           border-radius: 50px;
-          font-weight: bold;
-          margin: 20px 0;
+          font-weight: 700;
+          font-size: 16px;
+          box-shadow: 0 8px 25px rgba(254, 204, 50, 0.4);
+          transition: all 0.3s ease;
         }
-        .footer {
-          background: var(--secondary);
+        .cta-button:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 12px 30px rgba(254, 204, 50, 0.5);
+        }
+        .info-box {
+          background: var(--light-bg);
+          border-radius: 15px;
           padding: 20px;
           text-align: center;
+          border: 1px solid rgba(254, 204, 50, 0.1);
+        }
+        .footer {
+          background: linear-gradient(135deg, var(--secondary) 0%, #0a0a8a 100%);
+          padding: 25px;
+          text-align: center;
+        }
+        .footer p {
           color: var(--white);
+          margin: 0;
+          font-size: 14px;
+          opacity: 0.9;
+        }
+        /* Mobile Responsive */
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .content { padding: 20px; }
+          .welcome-box { padding: 20px; }
+          h1 { font-size: 24px; }
+          .cta-button { padding: 14px 30px; font-size: 14px; }
         }
       </style>
     </head>
@@ -71,23 +139,44 @@ const emailTemplates = {
           <img src="https://jewelsamarth.in/logo.png" alt="Jewel Samarth" class="logo">
         </div>
         <div class="content">
-          <h1>Welcome to Jewel Samarth!</h1>
-          <p>Hello ${username},</p>
-          <p>We're thrilled to have you join our family of jewelry enthusiasts!</p>
-          <a href="https://jewelsamarth.in" class="cta-button">Explore Collections</a>
+          <div class="welcome-box">
+            <h1>Welcome to Jewel Samarth! ✨</h1>
+            <p style="font-size: 18px; text-align: center; margin: 0 0 15px 0; color: var(--text);">
+              Hello <span class="username">${username}</span>,
+            </p>
+            <p style="font-size: 16px; text-align: center; line-height: 1.7; margin: 0 0 25px 0; color: var(--text);">
+              We're absolutely thrilled to have you join our exclusive family of jewelry enthusiasts! 
+              Your journey into the world of exquisite craftsmanship begins now.
+            </p>
+          </div>
+          
+          <div style="text-align: center; margin-bottom: 30px;">
+            <a href="https://jewelsamarth.in" class="cta-button">
+              🛍️ Explore Our Collections
+            </a>
+          </div>
+          
+          <div class="info-box">
+            <p style="margin: 0; font-size: 14px; color: var(--gray); line-height: 1.6;">
+              💎 Follow us for the latest updates and exclusive offers.<br>
+              Get ready to discover timeless elegance and modern sophistication.
+            </p>
+          </div>
         </div>
         <div class="footer">
-          <p>© ${new Date().getFullYear()} Jewel Samarth</p>
+          <p>© ${new Date().getFullYear()} Jewel Samarth - Crafting Dreams into Reality</p>
         </div>
       </div>
     </body>
     </html>
   `,
+
   otp: (username, otp) => `
     <!DOCTYPE html>
     <html>
     <head>
       <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <style>
         :root {
           --primary: #fecc32;
@@ -95,50 +184,136 @@ const emailTemplates = {
           --text: #333333;
           --light-bg: #f8f9fa;
           --white: #ffffff;
+          --gray: #6b7280;
         }
         body {
-          font-family: 'Helvetica Neue', Arial, sans-serif;
+          font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
           line-height: 1.6;
           color: var(--text);
           max-width: 600px;
           margin: 0 auto;
-          padding: 0;
+          background-color: var(--light-bg);
+          padding: 20px;
         }
         .email-container {
-          background: var(--white);
+          background: linear-gradient(135deg, var(--white) 0%, #fafbfc 100%);
           border-radius: 20px;
           overflow: hidden;
-          box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+          box-shadow: 0 20px 40px rgba(6, 6, 117, 0.1), 0 1px 3px rgba(0,0,0,0.05);
         }
         .header {
-          background: var(--secondary);
-          padding: 30px;
+          background: linear-gradient(135deg, var(--secondary) 0%, #0a0a8a 100%);
+          padding: 40px 30px;
           text-align: center;
+          position: relative;
+        }
+        .header::before {
+          content: '';
+          position: absolute;
+          top: 10px;
+          right: 20px;
+          width: 60px;
+          height: 60px;
+          background: var(--primary);
+          border-radius: 50%;
+          opacity: 0.1;
         }
         .logo {
           max-width: 180px;
+          height: auto;
+          filter: brightness(0) invert(1);
         }
         .content {
-          padding: 30px;
+          padding: 40px 30px;
+        }
+        .title {
+          color: var(--secondary);
+          margin: 0 0 20px 0;
+          font-size: 24px;
+          font-weight: 700;
+          text-align: center;
+        }
+        .username {
+          color: var(--secondary);
+          font-weight: 600;
         }
         .otp-box {
-          background: var(--light-bg);
+          background: linear-gradient(135deg, var(--light-bg) 0%, var(--white) 100%);
+          border-radius: 20px;
+          padding: 30px;
+          text-align: center;
+          margin: 30px 0;
+          border: 3px solid rgba(254, 204, 50, 0.4);
+          position: relative;
+          overflow: hidden;
+        }
+        .otp-box::before {
+          content: '';
+          position: absolute;
+          top: -10px;
+          left: -10px;
+          width: 40px;
+          height: 40px;
+          background: var(--primary);
+          border-radius: 50%;
+          opacity: 0.1;
+        }
+        .otp-box::after {
+          content: '';
+          position: absolute;
+          bottom: -15px;
+          right: -15px;
+          width: 60px;
+          height: 60px;
+          background: var(--secondary);
+          border-radius: 50%;
+          opacity: 0.05;
+        }
+        .otp {
+          font-size: 42px;
+          letter-spacing: 8px;
+          color: var(--secondary);
+          font-weight: 800;
+          margin-bottom: 15px;
+          font-family: 'Courier New', Consolas, monospace;
+          position: relative;
+          z-index: 1;
+        }
+        .expire-badge {
+          background: linear-gradient(135deg, var(--primary) 0%, #ffd700 100%);
+          color: var(--secondary);
+          padding: 8px 20px;
+          border-radius: 50px;
+          display: inline-block;
+          font-size: 14px;
+          font-weight: 600;
+          position: relative;
+          z-index: 1;
+        }
+        .security-info {
+          background: linear-gradient(135deg, rgba(254, 204, 50, 0.1) 0%, rgba(254, 204, 50, 0.05) 100%);
           border-radius: 15px;
           padding: 20px;
           text-align: center;
-          margin: 20px 0;
-        }
-        .otp {
-          font-size: 32px;
-          letter-spacing: 5px;
-          color: var(--secondary);
-          font-weight: bold;
+          border: 1px solid rgba(254, 204, 50, 0.2);
         }
         .footer {
-          background: var(--secondary);
-          padding: 20px;
+          background: linear-gradient(135deg, var(--secondary) 0%, #0a0a8a 100%);
+          padding: 25px;
           text-align: center;
+        }
+        .footer p {
           color: var(--white);
+          margin: 0;
+          font-size: 14px;
+          opacity: 0.9;
+        }
+        /* Mobile Responsive */
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .content { padding: 20px; }
+          .otp { font-size: 36px; letter-spacing: 6px; }
+          .title { font-size: 20px; }
         }
       </style>
     </head>
@@ -148,16 +323,30 @@ const emailTemplates = {
           <img src="https://jewelsamarth.in/logo.png" alt="Jewel Samarth" class="logo">
         </div>
         <div class="content">
-          <h2>Your Verification Code</h2>
-          <p>Hello ${username || 'Customer'},</p>
-          <p>Use this OTP to verify your account:</p>
+          <div style="text-align: center; margin-bottom: 30px;">
+            <h2 class="title">🔐 Your Verification Code</h2>
+            <p style="font-size: 16px; margin: 0 0 15px 0; color: var(--text);">
+              Hello <span class="username">${username || 'Customer'}</span>,
+            </p>
+            <p style="font-size: 16px; margin: 0 0 30px 0; color: var(--gray);">
+              Use this secure code to verify your account:
+            </p>
+          </div>
+          
           <div class="otp-box">
             <div class="otp">${otp}</div>
-            <p>Expires in 10 minutes</p>
+            <div class="expire-badge">⏰ Expires in 10 minutes</div>
+          </div>
+          
+          <div class="security-info">
+            <p style="margin: 0; font-size: 14px; color: var(--gray); line-height: 1.6;">
+              🔒 <strong>Security Notice:</strong> For your protection, never share this code with anyone.<br>
+              If you didn't request this verification, please ignore this email and contact our support team.
+            </p>
           </div>
         </div>
         <div class="footer">
-          <p>© ${new Date().getFullYear()} Jewel Samarth</p>
+          <p>© ${new Date().getFullYear()} Jewel Samarth - Secure & Trusted</p>
         </div>
       </div>
     </body>
@@ -198,12 +387,12 @@ const registerController = async (req, res) => {
       expiresIn: "4d"
     });
 
-    // Send welcome email
+    // Send welcome email with modern template
     try {
       await transporter.sendMail({
         from: process.env.SMTP_NO_REPLY_SENDER_EMAIL,
         to: email,
-        subject: "Welcome to Jewel Samarth!",
+        subject: "Welcome to Jewel Samarth! ✨",
         html: emailTemplates.welcome(username)
       });
     } catch (emailError) {
@@ -320,10 +509,11 @@ const sendVerifyOtpController = async (req, res) => {
     user.verifyOtpExpireAt = Date.now() + 600000; // 10 minutes
     await user.save();
 
+    // Send OTP email with modern template
     await transporter.sendMail({
       from: process.env.SMTP_NO_REPLY_SENDER_EMAIL,
       to: user.email,
-      subject: "Verify Your Jewel Samarth Account",
+      subject: "🔐 Verify Your Jewel Samarth Account",
       html: emailTemplates.otp(user.username, otp)
     });
 
@@ -421,10 +611,11 @@ const resetOtpController = async (req, res) => {
     user.resetOtpExpireAt = Date.now() + 600000; // 10 minutes
     await user.save();
 
+    // Send password reset OTP with modern template
     await transporter.sendMail({
       from: process.env.SMTP_NO_REPLY_SENDER_EMAIL,
       to: user.email,
-      subject: "Password Reset OTP",
+      subject: "🔒 Password Reset Code - Jewel Samarth",
       html: emailTemplates.otp(user.username, otp)
     });
 
