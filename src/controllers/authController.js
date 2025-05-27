@@ -57,7 +57,8 @@ const emailTemplates = {
           }
           
           .header {
-            background: #060675;
+            margin-top: 20px;
+            background: #fffefc;
             padding: 40px 20px;
             text-align: center;
           }
@@ -128,11 +129,12 @@ const emailTemplates = {
           }
           
           .footer {
-            background: #060675;
+            background: #E5E7EB;
             padding: 20px;
             text-align: center;
             color: #ffffff;
             font-size: 12px;
+            margin-bottom: 20px;
           }
           
           /* Responsive styles */
@@ -409,7 +411,9 @@ const emailTemplates = {
                   <td class="content">
                     <h1>Account Verification Code</h1>
                     <p>
-                      Hello <span class="highlight">${username || 'Valued Customer'}</span>,<br>
+                      Hello <span class="highlight">${
+                        username || "Valued Customer"
+                      }</span>,<br>
                       Please use the following verification code to complete your secure login:
                     </p>
                     
@@ -445,7 +449,7 @@ const emailTemplates = {
       </body>
       </html>
     `;
-  }
+  },
 };
 
 // Register Controller
@@ -455,7 +459,7 @@ const registerController = async (req, res) => {
   if (!username || !email || !password) {
     return res.status(400).json({
       success: false,
-      message: "Please provide all required fields"
+      message: "Please provide all required fields",
     });
   }
 
@@ -464,21 +468,21 @@ const registerController = async (req, res) => {
     if (existingUser) {
       return res.status(409).json({
         success: false,
-        message: "User already exists"
+        message: "User already exists",
       });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = new User({ 
-      username, 
-      email, 
-      password: hashedPassword 
+    const newUser = new User({
+      username,
+      email,
+      password: hashedPassword,
     });
-    
+
     await newUser.save();
 
     const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, {
-      expiresIn: "4d"
+      expiresIn: "4d",
     });
 
     // Send welcome email
@@ -488,7 +492,7 @@ const registerController = async (req, res) => {
         to: email,
         subject: "Welcome to Jewel Samarth! ✨",
         html: emailTemplates.welcome(username),
-        text: `Welcome to Jewel Samarth, ${username}!\n\nWe're thrilled to have you join our exclusive family of jewelry enthusiasts. Your journey into the world of exquisite craftsmanship and timeless elegance begins now.\n\nVisit us at: https://jewelsamarth.in`
+        text: `Welcome to Jewel Samarth, ${username}!\n\nWe're thrilled to have you join our exclusive family of jewelry enthusiasts. Your journey into the world of exquisite craftsmanship and timeless elegance begins now.\n\nVisit us at: https://jewelsamarth.in`,
       });
     } catch (emailError) {
       console.error("Email sending error:", emailError);
@@ -502,16 +506,15 @@ const registerController = async (req, res) => {
         id: newUser._id,
         username,
         email,
-        isAccountVerified: false
-      }
+        isAccountVerified: false,
+      },
     });
-
   } catch (error) {
     console.error("Registration error:", error);
     return res.status(500).json({
       success: false,
       message: "Registration failed",
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -523,7 +526,7 @@ const loginController = async (req, res) => {
   if (!email || !password) {
     return res.status(400).json({
       success: false,
-      message: "Email and password are required"
+      message: "Email and password are required",
     });
   }
 
@@ -532,7 +535,7 @@ const loginController = async (req, res) => {
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: "User not found"
+        message: "User not found",
       });
     }
 
@@ -540,12 +543,12 @@ const loginController = async (req, res) => {
     if (!isMatch) {
       return res.status(401).json({
         success: false,
-        message: "Invalid credentials"
+        message: "Invalid credentials",
       });
     }
 
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "4d"
+      expiresIn: "4d",
     });
 
     return res.json({
@@ -556,16 +559,15 @@ const loginController = async (req, res) => {
         id: user._id,
         username: user.username,
         email: user.email,
-        isAccountVerified: user.isAccountVerified
-      }
+        isAccountVerified: user.isAccountVerified,
+      },
     });
-
   } catch (error) {
     console.error("Login error:", error);
     return res.status(500).json({
       success: false,
       message: "Login failed",
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -575,7 +577,7 @@ const logoutController = (req, res) => {
   res.clearCookie("token");
   return res.json({
     success: true,
-    message: "Logged out successfully"
+    message: "Logged out successfully",
   });
 };
 
@@ -588,14 +590,14 @@ const sendVerifyOtpController = async (req, res) => {
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: "User not found"
+        message: "User not found",
       });
     }
 
     if (user.isAccountVerified) {
       return res.json({
         success: false,
-        message: "Account already verified"
+        message: "Account already verified",
       });
     }
 
@@ -610,20 +612,19 @@ const sendVerifyOtpController = async (req, res) => {
       to: user.email,
       subject: "🔐 Verify Your Jewel Samarth Account",
       html: emailTemplates.otp(user.username, otp),
-      text: `Your Jewel Samarth verification code is: ${otp}\n\nThis code will expire in 10 minutes. Please enter it on our website to verify your account.\n\nIf you didn't request this code, please contact our support team immediately.`
+      text: `Your Jewel Samarth verification code is: ${otp}\n\nThis code will expire in 10 minutes. Please enter it on our website to verify your account.\n\nIf you didn't request this code, please contact our support team immediately.`,
     });
 
     return res.json({
       success: true,
-      message: "Verification OTP sent"
+      message: "Verification OTP sent",
     });
-
   } catch (error) {
     console.error("OTP sending error:", error);
     return res.status(500).json({
       success: false,
       message: "Failed to send OTP",
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -635,7 +636,7 @@ const verifyOtpController = async (req, res) => {
   if (!userId || !otp) {
     return res.status(400).json({
       success: false,
-      message: "User ID and OTP are required"
+      message: "User ID and OTP are required",
     });
   }
 
@@ -644,21 +645,21 @@ const verifyOtpController = async (req, res) => {
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: "User not found"
+        message: "User not found",
       });
     }
 
     if (user.verifyOtp !== otp) {
       return res.status(400).json({
         success: false,
-        message: "Invalid OTP"
+        message: "Invalid OTP",
       });
     }
 
     if (Date.now() > user.verifyOtpExpireAt) {
       return res.status(400).json({
         success: false,
-        message: "OTP expired"
+        message: "OTP expired",
       });
     }
 
@@ -669,15 +670,14 @@ const verifyOtpController = async (req, res) => {
 
     return res.json({
       success: true,
-      message: "Account verified successfully"
+      message: "Account verified successfully",
     });
-
   } catch (error) {
     console.error("OTP verification error:", error);
     return res.status(500).json({
       success: false,
       message: "OTP verification failed",
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -689,7 +689,7 @@ const resetOtpController = async (req, res) => {
   if (!email) {
     return res.status(400).json({
       success: false,
-      message: "Email is required"
+      message: "Email is required",
     });
   }
 
@@ -698,7 +698,7 @@ const resetOtpController = async (req, res) => {
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: "User not found"
+        message: "User not found",
       });
     }
 
@@ -713,20 +713,19 @@ const resetOtpController = async (req, res) => {
       to: user.email,
       subject: "🔒 Password Reset Code - Jewel Samarth",
       html: emailTemplates.otp(user.username, otp),
-      text: `Your Jewel Samarth password reset code is: ${otp}\n\nThis code will expire in 10 minutes. Please enter it on our website to reset your password.\n\nIf you didn't request this code, please contact our support team immediately.`
+      text: `Your Jewel Samarth password reset code is: ${otp}\n\nThis code will expire in 10 minutes. Please enter it on our website to reset your password.\n\nIf you didn't request this code, please contact our support team immediately.`,
     });
 
     return res.json({
       success: true,
-      message: "Password reset OTP sent"
+      message: "Password reset OTP sent",
     });
-
   } catch (error) {
     console.error("Password reset error:", error);
     return res.status(500).json({
       success: false,
       message: "Failed to send reset OTP",
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -738,7 +737,7 @@ const verifyResetOtpController = async (req, res) => {
   if (!email || !otp) {
     return res.status(400).json({
       success: false,
-      message: "Email and OTP are required"
+      message: "Email and OTP are required",
     });
   }
 
@@ -747,35 +746,34 @@ const verifyResetOtpController = async (req, res) => {
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: "User not found"
+        message: "User not found",
       });
     }
 
     if (user.resetOtp !== otp) {
       return res.status(400).json({
         success: false,
-        message: "Invalid OTP"
+        message: "Invalid OTP",
       });
     }
 
     if (Date.now() > user.resetOtpExpireAt) {
       return res.status(400).json({
         success: false,
-        message: "OTP expired"
+        message: "OTP expired",
       });
     }
 
     return res.json({
       success: true,
-      message: "OTP verified"
+      message: "OTP verified",
     });
-
   } catch (error) {
     console.error("OTP verification error:", error);
     return res.status(500).json({
       success: false,
       message: "OTP verification failed",
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -787,7 +785,7 @@ const resetPasswordController = async (req, res) => {
   if (!email || !otp || !newPassword) {
     return res.status(400).json({
       success: false,
-      message: "All fields are required"
+      message: "All fields are required",
     });
   }
 
@@ -796,21 +794,21 @@ const resetPasswordController = async (req, res) => {
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: "User not found"
+        message: "User not found",
       });
     }
 
     if (user.resetOtp !== otp) {
       return res.status(400).json({
         success: false,
-        message: "Invalid OTP"
+        message: "Invalid OTP",
       });
     }
 
     if (Date.now() > user.resetOtpExpireAt) {
       return res.status(400).json({
         success: false,
-        message: "OTP expired"
+        message: "OTP expired",
       });
     }
 
@@ -822,15 +820,14 @@ const resetPasswordController = async (req, res) => {
 
     return res.json({
       success: true,
-      message: "Password reset successful"
+      message: "Password reset successful",
     });
-
   } catch (error) {
     console.error("Password reset error:", error);
     return res.status(500).json({
       success: false,
       message: "Password reset failed",
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -859,5 +856,5 @@ module.exports = {
   resetOtpController,
   verifyResetOtpController,
   resetPasswordController,
-  isAccountVerified
+  isAccountVerified,
 };
