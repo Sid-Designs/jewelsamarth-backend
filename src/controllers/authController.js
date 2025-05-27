@@ -136,7 +136,7 @@ const emailTemplates = {
     <body>
       <div class="email-container">
         <div class="header">
-          <img src="https://jewelsamarth.in/logo.png" alt="Jewel Samarth" class="logo">
+          <img src="https://res.cloudinary.com/dplww7z06/image/upload/v1748376796/JewelSamarth_Logo_cluva5.png" alt="Jewel Samarth" class="logo">
         </div>
         <div class="content">
           <div class="welcome-box">
@@ -320,7 +320,7 @@ const emailTemplates = {
     <body>
       <div class="email-container">
         <div class="header">
-          <img src="https://jewelsamarth.in/logo.png" alt="Jewel Samarth" class="logo">
+          <img src="https://res.cloudinary.com/dplww7z06/image/upload/v1748376796/JewelSamarth_Logo_cluva5.png" alt="Jewel Samarth" class="logo">
         </div>
         <div class="content">
           <div style="text-align: center; margin-bottom: 30px;">
