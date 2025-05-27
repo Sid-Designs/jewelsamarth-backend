@@ -3,7 +3,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const transporter = require("../config/nodeMailer");
 
-// Modern Email Templates
+// Modern Email Templates with copy functionality
 const emailTemplates = {
   welcome: (username) => `
     <!DOCTYPE html>
@@ -30,138 +30,122 @@ const emailTemplates = {
           padding: 20px;
         }
         .email-container {
-          background: linear-gradient(135deg, var(--white) 0%, #fafbfc 100%);
+          background: var(--white);
           border-radius: 20px;
           overflow: hidden;
-          box-shadow: 0 20px 40px rgba(6, 6, 117, 0.1), 0 1px 3px rgba(0,0,0,0.05);
+          box-shadow: 0 10px 30px rgba(6, 6, 117, 0.08);
+          border: 1px solid rgba(6, 6, 117, 0.05);
         }
         .header {
           background: linear-gradient(135deg, var(--secondary) 0%, #0a0a8a 100%);
           padding: 40px 30px;
           text-align: center;
           position: relative;
-        }
-        .header::before {
-          content: '';
-          position: absolute;
-          top: 10px;
-          right: 20px;
-          width: 60px;
-          height: 60px;
-          background: var(--primary);
-          border-radius: 50%;
-          opacity: 0.1;
+          overflow: hidden;
         }
         .header::after {
           content: '';
           position: absolute;
-          bottom: 15px;
-          left: 30px;
-          width: 30px;
-          height: 30px;
-          background: var(--primary);
+          top: -50px;
+          right: -50px;
+          width: 150px;
+          height: 150px;
+          background: rgba(254, 204, 50, 0.1);
           border-radius: 50%;
-          opacity: 0.15;
         }
-        .logo {
-          max-width: 180px;
-          height: auto;
-          filter: brightness(0) invert(1);
+        .logo-text {
+          color: white;
+          font-size: 24px;
+          font-weight: 700;
+          position: relative;
+          z-index: 2;
         }
         .content {
           padding: 40px 30px;
         }
         .welcome-box {
-          background: linear-gradient(135deg, rgba(254, 204, 50, 0.15) 0%, rgba(254, 204, 50, 0.05) 100%);
+          background: linear-gradient(135deg, rgba(254, 204, 50, 0.08) 0%, rgba(254, 204, 50, 0.03) 100%);
           border-radius: 20px;
           padding: 30px;
           margin-bottom: 30px;
-          border: 2px solid rgba(254, 204, 50, 0.2);
+          border: 1px dashed rgba(254, 204, 50, 0.3);
+          text-align: center;
         }
         h1 {
           color: var(--secondary);
           margin: 0 0 20px 0;
-          font-size: 28px;
+          font-size: 26px;
           font-weight: 700;
-          text-align: center;
         }
         .username {
           color: var(--secondary);
           font-weight: 600;
+          display: inline-block;
+          padding: 0 5px;
+          background: rgba(254, 204, 50, 0.2);
+          border-radius: 4px;
         }
         .cta-button {
           display: inline-block;
           background: linear-gradient(135deg, var(--primary) 0%, #ffd700 100%);
           color: var(--secondary) !important;
-          padding: 16px 40px;
+          padding: 14px 32px;
           text-decoration: none;
           border-radius: 50px;
-          font-weight: 700;
-          font-size: 16px;
-          box-shadow: 0 8px 25px rgba(254, 204, 50, 0.4);
+          font-weight: 600;
+          font-size: 15px;
+          box-shadow: 0 4px 15px rgba(254, 204, 50, 0.3);
           transition: all 0.3s ease;
+          margin: 15px 0;
         }
         .cta-button:hover {
           transform: translateY(-2px);
-          box-shadow: 0 12px 30px rgba(254, 204, 50, 0.5);
-        }
-        .info-box {
-          background: var(--light-bg);
-          border-radius: 15px;
-          padding: 20px;
-          text-align: center;
-          border: 1px solid rgba(254, 204, 50, 0.1);
+          box-shadow: 0 6px 20px rgba(254, 204, 50, 0.4);
         }
         .footer {
-          background: linear-gradient(135deg, var(--secondary) 0%, #0a0a8a 100%);
-          padding: 25px;
+          background: var(--light-bg);
+          padding: 20px;
           text-align: center;
+          border-top: 1px solid rgba(6, 6, 117, 0.05);
+          border-radius: 0 0 20px 20px;
         }
         .footer p {
-          color: var(--white);
+          color: var(--gray);
           margin: 0;
-          font-size: 14px;
-          opacity: 0.9;
+          font-size: 13px;
         }
         /* Mobile Responsive */
         @media (max-width: 600px) {
           body { padding: 10px; }
-          .content { padding: 20px; }
+          .content { padding: 25px; }
           .welcome-box { padding: 20px; }
-          h1 { font-size: 24px; }
-          .cta-button { padding: 14px 30px; font-size: 14px; }
+          h1 { font-size: 22px; }
         }
       </style>
     </head>
     <body>
       <div class="email-container">
         <div class="header">
-          <img src="https://res.cloudinary.com/dplww7z06/image/upload/v1748376796/JewelSamarth_Logo_cluva5.png" alt="Jewel Samarth" class="logo">
+          <div class="logo-text">Jewel Samarth</div>
         </div>
         <div class="content">
           <div class="welcome-box">
             <h1>Welcome to Jewel Samarth! ✨</h1>
-            <p style="font-size: 18px; text-align: center; margin: 0 0 15px 0; color: var(--text);">
+            <p style="font-size: 16px; margin: 15px 0; color: var(--text);">
               Hello <span class="username">${username}</span>,
             </p>
-            <p style="font-size: 16px; text-align: center; line-height: 1.7; margin: 0 0 25px 0; color: var(--text);">
-              We're absolutely thrilled to have you join our exclusive family of jewelry enthusiasts! 
-              Your journey into the world of exquisite craftsmanship begins now.
+            <p style="font-size: 15px; line-height: 1.7; margin: 0 0 20px 0; color: var(--text);">
+              We're thrilled to have you join our jewelry family! Your journey into exquisite craftsmanship begins now.
             </p>
-          </div>
-          
-          <div style="text-align: center; margin-bottom: 30px;">
+            
             <a href="https://jewelsamarth.in" class="cta-button">
-              🛍️ Explore Our Collections
+              Explore Our Collections
             </a>
           </div>
           
-          <div class="info-box">
-            <p style="margin: 0; font-size: 14px; color: var(--gray); line-height: 1.6;">
-              💎 Follow us for the latest updates and exclusive offers.<br>
-              Get ready to discover timeless elegance and modern sophistication.
-            </p>
-          </div>
+          <p style="text-align: center; font-size: 14px; color: var(--gray); margin-top: 30px;">
+            Follow us for the latest updates and exclusive offers.
+          </p>
         </div>
         <div class="footer">
           <p>© ${new Date().getFullYear()} Jewel Samarth - Crafting Dreams into Reality</p>
@@ -196,40 +180,43 @@ const emailTemplates = {
           padding: 20px;
         }
         .email-container {
-          background: linear-gradient(135deg, var(--white) 0%, #fafbfc 100%);
+          background: var(--white);
           border-radius: 20px;
           overflow: hidden;
-          box-shadow: 0 20px 40px rgba(6, 6, 117, 0.1), 0 1px 3px rgba(0,0,0,0.05);
+          box-shadow: 0 10px 30px rgba(6, 6, 117, 0.08);
+          border: 1px solid rgba(6, 6, 117, 0.05);
         }
         .header {
           background: linear-gradient(135deg, var(--secondary) 0%, #0a0a8a 100%);
-          padding: 40px 30px;
+          padding: 30px;
           text-align: center;
           position: relative;
+          overflow: hidden;
         }
-        .header::before {
+        .header::after {
           content: '';
           position: absolute;
-          top: 10px;
-          right: 20px;
-          width: 60px;
-          height: 60px;
-          background: var(--primary);
+          top: -30px;
+          right: -30px;
+          width: 100px;
+          height: 100px;
+          background: rgba(254, 204, 50, 0.1);
           border-radius: 50%;
-          opacity: 0.1;
         }
-        .logo {
-          max-width: 180px;
-          height: auto;
-          filter: brightness(0) invert(1);
+        .logo-text {
+          color: white;
+          font-size: 22px;
+          font-weight: 700;
+          position: relative;
+          z-index: 2;
         }
         .content {
-          padding: 40px 30px;
+          padding: 30px;
         }
-        .title {
+        h2 {
           color: var(--secondary);
-          margin: 0 0 20px 0;
-          font-size: 24px;
+          margin: 0 0 15px 0;
+          font-size: 22px;
           font-weight: 700;
           text-align: center;
         }
@@ -237,111 +224,105 @@ const emailTemplates = {
           color: var(--secondary);
           font-weight: 600;
         }
-        .otp-box {
-          background: linear-gradient(135deg, var(--light-bg) 0%, var(--white) 100%);
-          border-radius: 20px;
-          padding: 30px;
-          text-align: center;
+        .otp-container {
           margin: 30px 0;
-          border: 3px solid rgba(254, 204, 50, 0.4);
+          text-align: center;
+        }
+        .otp-display {
+          display: inline-block;
           position: relative;
-          overflow: hidden;
+          cursor: pointer;
         }
-        .otp-box::before {
-          content: '';
-          position: absolute;
-          top: -10px;
-          left: -10px;
-          width: 40px;
-          height: 40px;
-          background: var(--primary);
-          border-radius: 50%;
-          opacity: 0.1;
-        }
-        .otp-box::after {
-          content: '';
-          position: absolute;
-          bottom: -15px;
-          right: -15px;
-          width: 60px;
-          height: 60px;
-          background: var(--secondary);
-          border-radius: 50%;
-          opacity: 0.05;
-        }
-        .otp {
-          font-size: 42px;
+        .otp-code {
+          font-size: 36px;
           letter-spacing: 8px;
           color: var(--secondary);
           font-weight: 800;
-          margin-bottom: 15px;
-          font-family: 'Courier New', Consolas, monospace;
-          position: relative;
-          z-index: 1;
+          font-family: 'Courier New', monospace;
+          padding: 15px 25px;
+          background: rgba(6, 6, 117, 0.03);
+          border-radius: 15px;
+          border: 1px dashed rgba(6, 6, 117, 0.1);
+          transition: all 0.3s ease;
+        }
+        .otp-code:hover {
+          background: rgba(254, 204, 50, 0.1);
+          border-color: rgba(254, 204, 50, 0.3);
+        }
+        .otp-copy-text {
+          font-size: 12px;
+          color: var(--gray);
+          margin-top: 8px;
+          opacity: 0;
+          transition: opacity 0.3s ease;
+        }
+        .otp-display:hover .otp-copy-text {
+          opacity: 1;
         }
         .expire-badge {
           background: linear-gradient(135deg, var(--primary) 0%, #ffd700 100%);
           color: var(--secondary);
-          padding: 8px 20px;
+          padding: 6px 15px;
           border-radius: 50px;
           display: inline-block;
-          font-size: 14px;
+          font-size: 13px;
           font-weight: 600;
-          position: relative;
-          z-index: 1;
+          margin-top: 15px;
         }
-        .security-info {
-          background: linear-gradient(135deg, rgba(254, 204, 50, 0.1) 0%, rgba(254, 204, 50, 0.05) 100%);
-          border-radius: 15px;
-          padding: 20px;
+        .security-note {
+          background: rgba(254, 204, 50, 0.05);
+          border-radius: 12px;
+          padding: 15px;
           text-align: center;
-          border: 1px solid rgba(254, 204, 50, 0.2);
+          margin-top: 30px;
+          border: 1px solid rgba(254, 204, 50, 0.1);
         }
         .footer {
-          background: linear-gradient(135deg, var(--secondary) 0%, #0a0a8a 100%);
-          padding: 25px;
+          background: var(--light-bg);
+          padding: 20px;
           text-align: center;
+          border-top: 1px solid rgba(6, 6, 117, 0.05);
+          border-radius: 0 0 20px 20px;
         }
         .footer p {
-          color: var(--white);
+          color: var(--gray);
           margin: 0;
-          font-size: 14px;
-          opacity: 0.9;
+          font-size: 13px;
         }
         /* Mobile Responsive */
         @media (max-width: 600px) {
           body { padding: 10px; }
-          .content { padding: 20px; }
-          .otp { font-size: 36px; letter-spacing: 6px; }
-          .title { font-size: 20px; }
+          .content { padding: 25px; }
+          .otp-code { font-size: 28px; letter-spacing: 6px; padding: 12px 20px; }
+          h2 { font-size: 20px; }
         }
       </style>
     </head>
     <body>
       <div class="email-container">
         <div class="header">
-          <img src="https://res.cloudinary.com/dplww7z06/image/upload/v1748376796/JewelSamarth_Logo_cluva5.png" alt="Jewel Samarth" class="logo">
+          <div class="logo-text">Jewel Samarth</div>
         </div>
         <div class="content">
-          <div style="text-align: center; margin-bottom: 30px;">
-            <h2 class="title">🔐 Your Verification Code</h2>
-            <p style="font-size: 16px; margin: 0 0 15px 0; color: var(--text);">
-              Hello <span class="username">${username || 'Customer'}</span>,
-            </p>
-            <p style="font-size: 16px; margin: 0 0 30px 0; color: var(--gray);">
-              Use this secure code to verify your account:
-            </p>
-          </div>
+          <h2>Your Verification Code</h2>
+          <p style="text-align: center; color: var(--text); margin-bottom: 5px;">
+            Hello <span class="username">${username || 'Customer'}</span>,
+          </p>
+          <p style="text-align: center; color: var(--gray); font-size: 15px; margin-bottom: 25px;">
+            Use this code to verify your account:
+          </p>
           
-          <div class="otp-box">
-            <div class="otp">${otp}</div>
+          <div class="otp-container">
+            <div class="otp-display" onclick="navigator.clipboard.writeText('${otp}')">
+              <div class="otp-code">${otp}</div>
+              <div class="otp-copy-text">Click to copy</div>
+            </div>
             <div class="expire-badge">⏰ Expires in 10 minutes</div>
           </div>
           
-          <div class="security-info">
+          <div class="security-note">
             <p style="margin: 0; font-size: 14px; color: var(--gray); line-height: 1.6;">
-              🔒 <strong>Security Notice:</strong> For your protection, never share this code with anyone.<br>
-              If you didn't request this verification, please ignore this email and contact our support team.
+              <strong>Security Notice:</strong> Never share this code. If you didn't request this, please ignore this email.
             </p>
           </div>
         </div>
@@ -349,11 +330,29 @@ const emailTemplates = {
           <p>© ${new Date().getFullYear()} Jewel Samarth - Secure & Trusted</p>
         </div>
       </div>
+      
+      <script>
+        // Simple copy functionality
+        document.addEventListener('DOMContentLoaded', function() {
+          const otpDisplay = document.querySelector('.otp-display');
+          if (otpDisplay) {
+            otpDisplay.addEventListener('click', function() {
+              const otp = '${otp}';
+              navigator.clipboard.writeText(otp).then(() => {
+                const copyText = this.querySelector('.otp-copy-text');
+                copyText.textContent = 'Copied!';
+                setTimeout(() => {
+                  copyText.textContent = 'Click to copy';
+                }, 2000);
+              });
+            });
+          }
+        });
+      </script>
     </body>
     </html>
   `
 };
-
 // Register Controller
 const registerController = async (req, res) => {
   const { username, email, password } = req.body;
