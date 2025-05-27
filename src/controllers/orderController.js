@@ -3,7 +3,6 @@ const Coupon = require("../models/couponModel");
 const Cart = require("../models/cartModel");
 const Razorpay = require("razorpay");
 const crypto = require("crypto");
-const nodemailer = require("nodemailer");
 require("dotenv").config();
 
 // Razorpay Setup
@@ -12,16 +11,256 @@ const razorpay = new Razorpay({
   key_secret: process.env.RAZORPAY_SECRET_ID,
 });
 
-// Email transporter setup
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
+const createOrderController = async (req, res) => {
+  try {
+    const {
+      userId,
+      firstName,
+      lastName,
+      phone,
+      pincode,
+      address,
+      city,
+      state,
+      email,
+      products,
+      totalAmt,
+      discount,
+      finalAmt,
+      paymentMethod,
+    } = req.body;
 
-// Email Templates
+    // Check for missing fields
+    if (
+      !userId ||
+      !firstName ||
+      !lastName ||
+      !phone ||
+      !pincode ||
+      !address ||
+      !city ||
+      !state ||
+      !email ||
+      !products ||
+      !totalAmt ||
+      !finalAmt ||
+      !paymentMethod
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing required details",
+      });
+    }
+
+    // Razorpay Order Options
+    const options = {
+      amount: finalAmt * 100, // Amount in paise
+      currency: "INR",
+      receipt: `JSO_${Date.now()}_${crypto.randomBytes(10).toString("hex")}`,
+      payment_capture: 1,
+    };
+
+    // Create Razorpay Order
+    const razorpayOrder = await razorpay.orders.create(options);
+
+    // Find the highest order number and increment it
+    const totalOrders = await Order.countDocuments(); // Count the total number of orders
+    const newOrderNumber = totalOrders + 1 + 10000; // Start sequence from 10001
+
+    // Create and save order in database
+    const newOrder = new Order({
+      userId,
+      firstName,
+      lastName,
+      phone,
+      pincode,
+      address,
+      city,
+      state,
+      email,
+      products,
+      totalAmt,
+      discount,
+      finalAmt,
+      paymentMethod,
+      razorpayOrderId: razorpayOrder.id,
+      status: "pending",
+      orderNumber: newOrderNumber,
+    });
+
+    await newOrder.save();
+
+    await Cart.findOneAndDelete({ userId });
+
+    res.json({
+      success: true,
+      message: "Order created successfully",
+      order: newOrder,
+      razorpayOrder,
+    });
+  } catch (e) {
+    res.json({
+      success: false,
+      message: `Error occurred while creating order: ${e.message}`,
+      error: e.message,
+    });
+  }
+};
+
+const verifyPaymentController = async (req, res) => {
+  try {
+    const { order_id, payment_id, signature, userId } = req.body;
+    const paymentSignature = crypto
+      .createHmac("sha256", process.env.RAZORPAY_SECRET_ID)
+      .update(`${order_id}|${payment_id}`)
+      .digest("hex");
+    if (paymentSignature !== signature) {
+      return res.json({
+        success: false,
+        message: "Payment Verification Failed",
+      });
+    }
+
+    const order = await Order.findOneAndUpdate(
+      { userId },
+      { payment_id: payment_id, paymentStatus: "paid" }
+    );
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
+    }
+    await order.save();
+    return res.json({
+      success: true,
+      message: "Payment Verification Successfull",
+    });
+  } catch (e) {
+    res.status(500).json({
+      success: false,
+      message: `Error occurred while verifying payment: ${e.message}`,
+      error: e.message,
+    });
+  }
+};
+
+const couponController = async (req, res) => {
+  try {
+    const { couponCode } = req.body;
+
+    const coupon = await Coupon.findOne({ code: couponCode });
+
+    if (!coupon) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid coupon code" });
+    }
+
+    if (new Date() > new Date(coupon.expiryDate)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Coupon has expired" });
+    }
+
+    res.json({ success: true, discount: coupon.discount });
+  } catch (error) {
+    res.json({ success: false, message: `os` });
+  }
+};
+
+const getOrderDetailsController = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.json({
+        success: false,
+        message: "Order not found",
+      });
+    }
+    res.json({
+      success: true,
+      order,
+    });
+  } catch (e) {
+    res.json({
+      success: false,
+      message: "Error Occured While Fetching Order Details",
+      error: e.message,
+    });
+  }
+};
+
+const getAllOrdersController = async (req, res) => {
+  try {
+    const orders = await Order.find({});
+    res.json({
+      order: orders,
+    });
+  } catch (e) {
+    res.json({
+      success: false,
+      message: "Error Occured While Fetching Products",
+      error: e.message,
+    });
+  }
+};
+
+const getAllOrderDetailsController = async (req, res) => {
+  try {
+    const { userId } = req.body;
+    const orders = await Order.find({ userId });
+    res.json({
+      success: true,
+      orders,
+    });
+  } catch (e) {
+    res.json({
+      success: false,
+      message: "Error Occured While Fetching All Orders",
+      error: e.message,
+    });
+  }
+};
+
+const changeOrderStatus = async (req, res) => {
+  try {
+    const { orderId, status } = req.body;
+    const order = await Order.findById(orderId);
+    order.status = status;
+    await order.save();
+    res.json({
+      success: true,
+      message: `Order is ${status}`,
+    });
+  } catch (e) {
+    res.json({
+      success: false,
+      message: "Error Occured While Fetching All Orders",
+      error: e.message,
+    });
+  }
+};
+
+const deleteOrderController = async (req, res) => {
+  try {
+    const {orderId} = req.params;
+    const order = await Order.findByIdAndDelete(orderId);
+    res.json({
+      success: true,
+      message: "Order Delete Successfully"
+    })
+  } catch (e) {
+    res.json({
+      success: false,
+      message: "Error Occured While Fetching All Orders",
+      error: e.message,
+    });
+  }
+};
+
+// Email Templates with the exact same design style as provided
 const emailTemplates = {
   orderCreated: (orderDetails) => {
     const year = new Date().getFullYear();
@@ -46,12 +285,15 @@ const emailTemplates = {
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Order Confirmation | Jewel Samarth</title>
         <style type="text/css">
+          /* Client-specific styles */
           body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
           table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
           img { -ms-interpolation-mode: bicubic; border: 0; height: auto; line-height: 100%; outline: none; text-decoration: none; }
           
+          /* Reset styles */
           body { margin: 0 !important; padding: 0 !important; width: 100% !important; margin-top: 10px!important; margin-bottom: 10px!important;}
           
+          /* iOS BLUE LINKS */
           a[x-apple-data-detectors] {
             color: inherit !important;
             text-decoration: none !important;
@@ -61,6 +303,7 @@ const emailTemplates = {
             line-height: inherit !important;
           }
           
+          /* Main styles */
           body {
             font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
             color: #333333;
@@ -177,6 +420,7 @@ const emailTemplates = {
             margin-bottom: 20px;
           }
           
+          /* Responsive styles */
           @media screen and (max-width: 600px) {
             .outer-table {
               width: 100% !important;
@@ -200,7 +444,7 @@ const emailTemplates = {
           }
         </style>
       </head>
-      <body>
+      <body style="margin: 0; padding: 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333333;">
         <table class="outer-table" border="0" cellpadding="0" cellspacing="0" width="100%">
           <tr>
             <td align="center" valign="top">
@@ -214,7 +458,8 @@ const emailTemplates = {
                   <td class="content">
                     <h1>Your Order is Confirmed!</h1>
                     <p>
-                      Thank you for your order, ${orderDetails.firstName}! We've received your order #${orderDetails.orderNumber} and it's now being processed.
+                      Thank you for your order, <span class="highlight">${orderDetails.firstName}</span>! 
+                      We've received your order #${orderDetails.orderNumber} and it's now being processed.
                     </p>
                     
                     <table class="order-details">
@@ -248,7 +493,8 @@ const emailTemplates = {
                     </div>
                     
                     <p style="font-size: 14px; color: #666666; text-align: center;">
-                      We'll send you another email when your order ships. If you have any questions, please contact us at <a href="mailto:support@jewelsamarth.in" style="color: #060675;">support@jewelsamarth.in</a>
+                      We'll send you another email when your order ships. For any questions, contact us at 
+                      <a href="mailto:support@jewelsamarth.in" style="color: #060675; text-decoration: none;">support@jewelsamarth.in</a>
                     </p>
                   </td>
                 </tr>
@@ -364,18 +610,6 @@ const emailTemplates = {
             color: white;
           }
           
-          .button {
-            display: inline-block;
-            background-color: #fecc32;
-            color: #060675 !important;
-            text-decoration: none;
-            padding: 12px 30px;
-            border-radius: 30px;
-            font-weight: bold;
-            margin: 20px 0;
-            text-align: center;
-          }
-          
           .payment-details {
             width: 100%;
             border-collapse: collapse;
@@ -394,6 +628,18 @@ const emailTemplates = {
             border-bottom: 1px solid #e5e7eb;
           }
           
+          .button {
+            display: inline-block;
+            background-color: #fecc32;
+            color: #060675 !important;
+            text-decoration: none;
+            padding: 12px 30px;
+            border-radius: 30px;
+            font-weight: bold;
+            margin: 20px 0;
+            text-align: center;
+          }
+          
           .footer {
             background: #E5E7EB;
             padding: 20px;
@@ -403,6 +649,7 @@ const emailTemplates = {
             margin-bottom: 20px;
           }
           
+          /* Responsive styles */
           @media screen and (max-width: 600px) {
             .outer-table {
               width: 100% !important;
@@ -426,7 +673,7 @@ const emailTemplates = {
           }
         </style>
       </head>
-      <body>
+      <body style="margin: 0; padding: 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333333;">
         <table class="outer-table" border="0" cellpadding="0" cellspacing="0" width="100%">
           <tr>
             <td align="center" valign="top">
@@ -440,7 +687,8 @@ const emailTemplates = {
                   <td class="content">
                     <h1>Payment Successful!</h1>
                     <p>
-                      Thank you for your payment, ${orderDetails.firstName}! Your order #${orderDetails.orderNumber} is now being processed.
+                      Thank you for your payment, <span class="highlight">${orderDetails.firstName}</span>! 
+                      Your order #${orderDetails.orderNumber} is now being processed.
                     </p>
                     
                     <div style="text-align: center; margin: 30px 0;">
@@ -481,7 +729,8 @@ const emailTemplates = {
                     </div>
                     
                     <p style="font-size: 14px; color: #666666; text-align: center;">
-                      We'll notify you when your order ships. For any questions, contact us at <a href="mailto:support@jewelsamarth.in" style="color: #060675;">support@jewelsamarth.in</a>
+                      We'll notify you when your order ships. For any questions, contact us at 
+                      <a href="mailto:support@jewelsamarth.in" style="color: #060675; text-decoration: none;">support@jewelsamarth.in</a>
                     </p>
                   </td>
                 </tr>
@@ -633,6 +882,7 @@ const emailTemplates = {
             margin-bottom: 20px;
           }
           
+          /* Responsive styles */
           @media screen and (max-width: 600px) {
             .outer-table {
               width: 100% !important;
@@ -656,7 +906,7 @@ const emailTemplates = {
           }
         </style>
       </head>
-      <body>
+      <body style="margin: 0; padding: 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333333;">
         <table class="outer-table" border="0" cellpadding="0" cellspacing="0" width="100%">
           <tr>
             <td align="center" valign="top">
@@ -670,7 +920,8 @@ const emailTemplates = {
                   <td class="content">
                     <h1>Order Status Updated</h1>
                     <p>
-                      Hello ${orderDetails.firstName}, the status of your order #${orderDetails.orderNumber} has been updated.
+                      Hello <span class="highlight">${orderDetails.firstName}</span>, 
+                      the status of your order #${orderDetails.orderNumber} has been updated.
                     </p>
                     
                     <div style="text-align: center; margin: 30px 0;">
@@ -685,7 +936,8 @@ const emailTemplates = {
                     </div>
                     
                     <p style="font-size: 14px; color: #666666; text-align: center;">
-                      For any questions about your order, please contact us at <a href="mailto:support@jewelsamarth.in" style="color: #060675;">support@jewelsamarth.in</a>
+                      For any questions about your order, please contact us at 
+                      <a href="mailto:support@jewelsamarth.in" style="color: #060675; text-decoration: none;">support@jewelsamarth.in</a>
                     </p>
                   </td>
                 </tr>
@@ -701,310 +953,6 @@ const emailTemplates = {
       </body>
       </html>
     `;
-  }
-};
-
-// Helper function to send emails
-const sendEmail = async (to, subject, html) => {
-  try {
-    await transporter.sendMail({
-      from: `"Jewel Samarth" <${process.env.EMAIL_USER}>`,
-      to,
-      subject,
-      html,
-    });
-  } catch (error) {
-    console.error("Error sending email:", error);
-  }
-};
-
-const createOrderController = async (req, res) => {
-  try {
-    const {
-      userId,
-      firstName,
-      lastName,
-      phone,
-      pincode,
-      address,
-      city,
-      state,
-      email,
-      products,
-      totalAmt,
-      discount,
-      finalAmt,
-      paymentMethod,
-    } = req.body;
-
-    // Check for missing fields
-    if (
-      !userId ||
-      !firstName ||
-      !lastName ||
-      !phone ||
-      !pincode ||
-      !address ||
-      !city ||
-      !state ||
-      !email ||
-      !products ||
-      !totalAmt ||
-      !finalAmt ||
-      !paymentMethod
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: "Missing required details",
-      });
-    }
-
-    // Razorpay Order Options
-    const options = {
-      amount: finalAmt * 100, // Amount in paise
-      currency: "INR",
-      receipt: `JSO_${Date.now()}_${crypto.randomBytes(10).toString("hex")}`,
-      payment_capture: 1,
-    };
-
-    // Create Razorpay Order
-    const razorpayOrder = await razorpay.orders.create(options);
-
-    // Find the highest order number and increment it
-    const totalOrders = await Order.countDocuments(); // Count the total number of orders
-    const newOrderNumber = totalOrders + 1 + 10000; // Start sequence from 10001
-
-    // Create and save order in database
-    const newOrder = new Order({
-      userId,
-      firstName,
-      lastName,
-      phone,
-      pincode,
-      address,
-      city,
-      state,
-      email,
-      products,
-      totalAmt,
-      discount,
-      finalAmt,
-      paymentMethod,
-      razorpayOrderId: razorpayOrder.id,
-      status: "pending",
-      orderNumber: newOrderNumber,
-    });
-
-    await newOrder.save();
-
-    // Send order confirmation email
-    await sendEmail(
-      email,
-      `Your Jewel Samarth Order #${newOrderNumber} is Confirmed`,
-      emailTemplates.orderCreated(newOrder)
-    );
-
-    await Cart.findOneAndDelete({ userId });
-
-    res.json({
-      success: true,
-      message: "Order created successfully",
-      order: newOrder,
-      razorpayOrder,
-    });
-  } catch (e) {
-    res.json({
-      success: false,
-      message: `Error occurred while creating order: ${e.message}`,
-      error: e.message,
-    });
-  }
-};
-
-const verifyPaymentController = async (req, res) => {
-  try {
-    const { order_id, payment_id, signature, userId } = req.body;
-    const paymentSignature = crypto
-      .createHmac("sha256", process.env.RAZORPAY_SECRET_ID)
-      .update(`${order_id}|${payment_id}`)
-      .digest("hex");
-    if (paymentSignature !== signature) {
-      return res.json({
-        success: false,
-        message: "Payment Verification Failed",
-      });
-    }
-
-    const order = await Order.findOneAndUpdate(
-      { userId, razorpayOrderId: order_id },
-      { payment_id: payment_id, paymentStatus: "paid", status: "processing" },
-      { new: true }
-    );
-    
-    if (!order) {
-      return res.status(404).json({
-        success: false,
-        message: "Order not found",
-      });
-    }
-
-    // Send payment success email
-    await sendEmail(
-      order.email,
-      `Payment Successful for Order #${order.orderNumber}`,
-      emailTemplates.paymentSuccess(order)
-    );
-
-    return res.json({
-      success: true,
-      message: "Payment Verification Successfull",
-    });
-  } catch (e) {
-    res.status(500).json({
-      success: false,
-      message: `Error occurred while verifying payment: ${e.message}`,
-      error: e.message,
-    });
-  }
-};
-
-const couponController = async (req, res) => {
-  try {
-    const { couponCode } = req.body;
-
-    const coupon = await Coupon.findOne({ code: couponCode });
-
-    if (!coupon) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid coupon code" });
-    }
-
-    if (new Date() > new Date(coupon.expiryDate)) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Coupon has expired" });
-    }
-
-    res.json({ success: true, discount: coupon.discount });
-  } catch (error) {
-    res.json({ success: false, message: `os` });
-  }
-};
-
-const getOrderDetailsController = async (req, res) => {
-  try {
-    const { orderId } = req.params;
-    const order = await Order.findById(orderId);
-    if (!order) {
-      return res.json({
-        success: false,
-        message: "Order not found",
-      });
-    }
-    res.json({
-      success: true,
-      order,
-    });
-  } catch (e) {
-    res.json({
-      success: false,
-      message: "Error Occured While Fetching Order Details",
-      error: e.message,
-    });
-  }
-};
-
-const getAllOrdersController = async (req, res) => {
-  try {
-    const orders = await Order.find({});
-    res.json({
-      order: orders,
-    });
-  } catch (e) {
-    res.json({
-      success: false,
-      message: "Error Occured While Fetching Products",
-      error: e.message,
-    });
-  }
-};
-
-const getAllOrderDetailsController = async (req, res) => {
-  try {
-    const { userId } = req.body;
-    const orders = await Order.find({ userId });
-    res.json({
-      success: true,
-      orders,
-    });
-  } catch (e) {
-    res.json({
-      success: false,
-      message: "Error Occured While Fetching All Orders",
-      error: e.message,
-    });
-  }
-};
-
-const changeOrderStatus = async (req, res) => {
-  try {
-    const { orderId, status } = req.body;
-    const order = await Order.findByIdAndUpdate(
-      orderId,
-      { status },
-      { new: true }
-    );
-    
-    if (!order) {
-      return res.status(404).json({
-        success: false,
-        message: "Order not found",
-      });
-    }
-
-    // Send status update email
-    await sendEmail(
-      order.email,
-      `Order #${order.orderNumber} Status Update`,
-      emailTemplates.statusUpdate(order, status)
-    );
-
-    res.json({
-      success: true,
-      message: `Order is ${status}`,
-    });
-  } catch (e) {
-    res.json({
-      success: false,
-      message: "Error Occured While Fetching All Orders",
-      error: e.message,
-    });
-  }
-};
-
-const deleteOrderController = async (req, res) => {
-  try {
-    const { orderId } = req.params;
-    const order = await Order.findByIdAndDelete(orderId);
-    
-    if (!order) {
-      return res.status(404).json({
-        success: false,
-        message: "Order not found",
-      });
-    }
-
-    res.json({
-      success: true,
-      message: "Order Delete Successfully"
-    });
-  } catch (e) {
-    res.json({
-      success: false,
-      message: "Error Occured While Fetching All Orders",
-      error: e.message,
-    });
   }
 };
 
