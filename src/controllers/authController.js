@@ -283,7 +283,8 @@ const emailTemplates = {
           }
           
           .header {
-            background: #060675;
+            margin-top: 20px;
+            background: #E5E7EB;
             padding: 40px 20px;
             text-align: center;
           }
@@ -362,10 +363,10 @@ const emailTemplates = {
           }
           
           .footer {
-            background: #060675;
+            color: #060675;
             padding: 20px;
             text-align: center;
-            color: #ffffff;
+            background: #E5E7EB;
             font-size: 12px;
           }
           
