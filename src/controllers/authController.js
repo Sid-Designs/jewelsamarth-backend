@@ -51,7 +51,7 @@ const emailTemplates = {
             max-width: 600px;
             margin: 0 auto;
             background-color: #ffffff;
-            border-radius: 8px;
+            border-radius: 20px;
             overflow: hidden;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
           }
@@ -277,7 +277,7 @@ const emailTemplates = {
             max-width: 600px;
             margin: 0 auto;
             background-color: #ffffff;
-            border-radius: 8px;
+            border-radius: 20px;
             overflow: hidden;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
           }
@@ -351,7 +351,7 @@ const emailTemplates = {
           .security-note {
             background-color: #f0f9f0;
             border: 1px solid #d0e8d0;
-            border-radius: 8px;
+            border-radius: 20px;
             padding: 15px;
             margin: 20px 0;
           }
