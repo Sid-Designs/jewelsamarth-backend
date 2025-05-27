@@ -1,36 +1,18 @@
 const express = require("express");
 const Wishlist = require("../models/whislistModel");
+const {addToWishlist, getWishlist, removeFromWishlist, clearWishlist} = require("../controllers/whislistController");
 const router = express.Router();
 
 // Add item to wishlist
-router.post("/add", async (req, res) => {
-    try {
-        const item = new Wishlist(req.body);
-        await item.save();
-        res.status(200).json({ message: "Item added to wishlist" });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
+router.post("/add", addToWishlist);
 
 // Get user's wishlist
-router.get("/:userId", async (req, res) => {
-    try {
-        const items = await Wishlist.find({ userId: req.params.userId }).populate("productId");
-        res.status(200).json(items);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
+router.get("/:userId", getWishlist);
 
 // Remove item from wishlist
-router.delete("/remove/:itemId", async (req, res) => {
-    try {
-        await Wishlist.findByIdAndDelete(req.params.itemId);
-        res.status(200).json({ message: "Item removed from wishlist" });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
+router.delete("/remove/:itemId", removeFromWishlist);
+
+// Clear entire wishlist for a user
+router.delete("/clear/:userId", clearWishlist);
 
 module.exports = router;
