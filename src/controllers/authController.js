@@ -58,7 +58,7 @@ const emailTemplates = {
           
           .header {
             margin-top: 20px;
-            background: #fffefc;
+            background: #E5E7EB;
             padding: 40px 20px;
             text-align: center;
           }
@@ -132,7 +132,7 @@ const emailTemplates = {
             background: #E5E7EB;
             padding: 20px;
             text-align: center;
-            color: #ffffff;
+            color: #060675;
             font-size: 12px;
             margin-bottom: 20px;
           }
