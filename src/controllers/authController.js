@@ -44,6 +44,8 @@ const emailTemplates = {
             width: 100%;
             max-width: 600px;
             margin: 20px auto;
+            border: 1px solid #e5e7eb;
+            border-radius: 20px;
           }
           
           .container {
@@ -270,6 +272,8 @@ const emailTemplates = {
             width: 100%;
             max-width: 600px;
             margin: 20px auto;
+            border: 1px solid #E5E7EB;
+            border-radius: 20px;
           }
           
           .container {
