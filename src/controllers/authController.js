@@ -38,17 +38,15 @@ const registerController = async (req, res) => {
 
     // Attempt to send welcome email
     try {
-      const mailOptions = {
-        from: process.env.SMTP_NO_REPLY_SENDER_EMAIL,
+      await transporter.sendMail({
+        from: `"Jewel Samarth" <${process.env.SMTP_NO_REPLY_SENDER_EMAIL}>`,
         to: email,
-        subject: "Welcome to Jewel Samarth!",
-        text: `Hello ${username}, welcome to Jewel Samarth! We are glad to have you.`,
-        html: `<h1>Welcome to Jewel Samarth</h1><p>Hello ${username}, we are excited to have you with us!</p>`,
-      };
-
-      await transporter.sendMail(mailOptions);
+        subject: "Welcome to Jewel Samarth! ✨",
+        html: emailTemplates.welcome(username),
+        text: `Welcome to Jewel Samarth, ${username}!\n\nWe're thrilled to have you join our exclusive family of jewelry enthusiasts. Your journey into the world of exquisite craftsmanship and timeless elegance begins now.\n\nVisit us at: https://jewelsamarth.in`,
+      });
     } catch (emailError) {
-      // Log the error but allow registration and login to proceed
+      console.error("Email sending error:", emailError);
     }
 
     // Auto-login user by returning the token and user details
@@ -63,7 +61,6 @@ const registerController = async (req, res) => {
         isAccountVerified: newUser.isAccountVerified || false, // Assuming this field exists
       },
     });
-
   } catch (error) {
     console.error("Error during registration:", error.message);
     return res.status(500).json({
@@ -133,14 +130,16 @@ const sendVerifyOtpController = async (req, res) => {
     user.verifyOtp = otp;
     user.verifyOtpExpireAt = Date.now() + 5 * 60 * 1000;
     await user.save();
-    const mailOptions = {
-      from: process.env.SMTP_NO_REPLY_SENDER_EMAIL,
+
+    // Send OTP email
+    await transporter.sendMail({
+      from: `"Jewel Samarth" <${process.env.SMTP_NO_REPLY_SENDER_EMAIL}>`,
       to: user.email,
-      subject: "Account Verification OTP",
-      text: "Hello, welcome to Jewel Samarth! We are send 6 Digit OTP.",
-      html: `<h1>Test Email</h1><br><h2>Your OTP is: ${otp}</h2>`,
-    };
-    await transporter.sendMail(mailOptions);
+      subject: "🔐 Verify Your Jewel Samarth Account",
+      html: emailTemplates.otp(user.username, otp),
+      text: `Your Jewel Samarth verification code is: ${otp}\n\nThis code will expire in 10 minutes. Please enter it on our website to verify your account.\n\nIf you didn't request this code, please contact our support team immediately.`,
+    });
+
     return res.json({
       success: true,
       message: "Verification OTP Sent Successfully",
@@ -215,14 +214,14 @@ const resetOtpController = async (req, res) => {
     user.resetOtp = otp;
     user.resetOtpExpireAt = Date.now() + 5 * 60 * 1000;
     await user.save();
-    const mailOptions = {
-      from: process.env.SMTP_NO_REPLY_SENDER_EMAIL,
+    // Send password reset OTP
+    await transporter.sendMail({
+      from: `"Jewel Samarth" <${process.env.SMTP_NO_REPLY_SENDER_EMAIL}>`,
       to: user.email,
-      subject: "Reset Password OTP",
-      text: "Hello, welcome to Jewel Samarth! We are send 6 Digit OTP.",
-      html: `<h1>Test Email</h1><br><h2>Your OTP is: ${otp}</h2>`,
-    };
-    await transporter.sendMail(mailOptions);
+      subject: "🔒 Password Reset Code - Jewel Samarth",
+      html: emailTemplates.otp(user.username, otp),
+      text: `Your Jewel Samarth password reset code is: ${otp}\n\nThis code will expire in 10 minutes. Please enter it on our website to reset your password.\n\nIf you didn't request this code, please contact our support team immediately.`,
+    });
     return res.json({
       success: true,
       message: "Reset OTP Sent Successfully",
