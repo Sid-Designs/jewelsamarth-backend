@@ -509,9 +509,9 @@ const registerController = async (req, res) => {
       token,
       user: {
         id: newUser._id,
-        username,
-        email,
-        isAccountVerified: false,
+        username: newUser.username,
+        email: newUser.email,
+        isAccountVerified: newUser.isAccountVerified || false,
       },
     });
   } catch (error) {
