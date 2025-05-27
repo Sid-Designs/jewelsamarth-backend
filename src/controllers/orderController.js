@@ -3,6 +3,7 @@ const Coupon = require("../models/couponModel");
 const Cart = require("../models/cartModel");
 const Razorpay = require("razorpay");
 const crypto = require("crypto");
+const nodemailer = require("nodemailer");
 require("dotenv").config();
 
 // Razorpay Setup
@@ -10,6 +11,712 @@ const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
   key_secret: process.env.RAZORPAY_SECRET_ID,
 });
+
+// Email transporter setup
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
+
+// Email Templates
+const emailTemplates = {
+  orderCreated: (orderDetails) => {
+    const year = new Date().getFullYear();
+    const productsList = orderDetails.products.map(
+      (product) => `
+      <tr>
+        <td style="padding: 10px; border-bottom: 1px solid #e5e7eb; text-align: left;">
+          ${product.name} (${product.quantity})
+        </td>
+        <td style="padding: 10px; border-bottom: 1px solid #e5e7eb; text-align: right;">
+          ₹${product.price * product.quantity}
+        </td>
+      </tr>
+    `
+    ).join("");
+
+    return `
+      <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+      <html xmlns="http://www.w3.org/1999/xhtml">
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Order Confirmation | Jewel Samarth</title>
+        <style type="text/css">
+          body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+          table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+          img { -ms-interpolation-mode: bicubic; border: 0; height: auto; line-height: 100%; outline: none; text-decoration: none; }
+          
+          body { margin: 0 !important; padding: 0 !important; width: 100% !important; margin-top: 10px!important; margin-bottom: 10px!important;}
+          
+          a[x-apple-data-detectors] {
+            color: inherit !important;
+            text-decoration: none !important;
+            font-size: inherit !important;
+            font-family: inherit !important;
+            font-weight: inherit !important;
+            line-height: inherit !important;
+          }
+          
+          body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            color: #333333;
+            box-shadow: 0 0 1px 0 rgba(0, 0, 0, 0.15), 0 6px 12px 0 rgba(0, 0, 0, 0.15);
+          }
+          
+          .outer-table {
+            width: 100%;
+            max-width: 600px;
+            margin: 20px auto;
+            border: 1px solid #e5e7eb;
+            border-radius: 20px;
+          }
+          
+          .container {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+          }
+          
+          .header {
+            margin-top: 20px;
+            background: #E5E7EB;
+            padding: 40px 20px;
+            text-align: center;
+          }
+          
+          .logo-img {
+            width: 180px;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+          }
+          
+          .content {
+            padding: 30px 20px;
+          }
+          
+          h1 {
+            color: #060675;
+            font-size: 24px;
+            font-weight: bold;
+            margin: 0 0 20px 0;
+            text-align: center;
+          }
+          
+          p {
+            font-size: 16px;
+            line-height: 1.5;
+            margin: 0 0 20px 0;
+            text-align: center;
+          }
+          
+          .highlight {
+            color: #fecc32;
+            font-weight: bold;
+          }
+          
+          .order-details {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+          }
+          
+          .order-details th {
+            background-color: #f3f4f6;
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+          }
+          
+          .order-details td {
+            padding: 10px;
+            border-bottom: 1px solid #e5e7eb;
+          }
+          
+          .total-row {
+            font-weight: bold;
+            background-color: #f9fafb;
+          }
+          
+          .status-badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            background-color: #f59e0b;
+            color: white;
+          }
+          
+          .button {
+            display: inline-block;
+            background-color: #fecc32;
+            color: #060675 !important;
+            text-decoration: none;
+            padding: 12px 30px;
+            border-radius: 30px;
+            font-weight: bold;
+            margin: 20px 0;
+            text-align: center;
+          }
+          
+          .footer {
+            background: #E5E7EB;
+            padding: 20px;
+            text-align: center;
+            color: #060675;
+            font-size: 12px;
+            margin-bottom: 20px;
+          }
+          
+          @media screen and (max-width: 600px) {
+            .outer-table {
+              width: 100% !important;
+              margin: 10px auto !important;
+            }
+            .container {
+              width: 100% !important;
+              border-radius: 0 !important;
+            }
+            .header, .content, .footer {
+              padding-left: 15px !important;
+              padding-right: 15px !important;
+            }
+            .header {
+              padding-top: 30px !important;
+              padding-bottom: 30px !important;
+            }
+            .logo-img {
+              width: 150px !important;
+            }
+          }
+        </style>
+      </head>
+      <body>
+        <table class="outer-table" border="0" cellpadding="0" cellspacing="0" width="100%">
+          <tr>
+            <td align="center" valign="top">
+              <table class="container" border="0" cellpadding="0" cellspacing="0" width="600">
+                <tr>
+                  <td class="header">
+                    <img src="https://res.cloudinary.com/dplww7z06/image/upload/v1748378717/Jewel_Samarth_Logo_tvtavg.png" alt="Jewel Samarth" class="logo-img" />
+                  </td>
+                </tr>
+                <tr>
+                  <td class="content">
+                    <h1>Your Order is Confirmed!</h1>
+                    <p>
+                      Thank you for your order, ${orderDetails.firstName}! We've received your order #${orderDetails.orderNumber} and it's now being processed.
+                    </p>
+                    
+                    <table class="order-details">
+                      <tr>
+                        <th colspan="2">Order Summary</th>
+                      </tr>
+                      ${productsList}
+                      <tr class="total-row">
+                        <td>Subtotal</td>
+                        <td style="text-align: right;">₹${orderDetails.totalAmt}</td>
+                      </tr>
+                      <tr class="total-row">
+                        <td>Discount</td>
+                        <td style="text-align: right;">-₹${orderDetails.discount || 0}</td>
+                      </tr>
+                      <tr class="total-row">
+                        <td>Total</td>
+                        <td style="text-align: right;">₹${orderDetails.finalAmt}</td>
+                      </tr>
+                    </table>
+                    
+                    <div style="text-align: center; margin: 30px 0;">
+                      <span class="status-badge">Payment Pending</span>
+                      <p style="font-size: 14px; margin-top: 10px;">
+                        Please complete your payment to proceed with order processing.
+                      </p>
+                    </div>
+                    
+                    <div style="text-align: center;">
+                      <a href="https://jewelsamarth.in/orders/${orderDetails._id}" class="button">View Order Details</a>
+                    </div>
+                    
+                    <p style="font-size: 14px; color: #666666; text-align: center;">
+                      We'll send you another email when your order ships. If you have any questions, please contact us at <a href="mailto:support@jewelsamarth.in" style="color: #060675;">support@jewelsamarth.in</a>
+                    </p>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="footer">
+                    © ${year} Jewel Samarth - Crafting Dreams into Reality
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </body>
+      </html>
+    `;
+  },
+
+  paymentSuccess: (orderDetails) => {
+    const year = new Date().getFullYear();
+    return `
+      <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+      <html xmlns="http://www.w3.org/1999/xhtml">
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Payment Successful | Jewel Samarth</title>
+        <style type="text/css">
+          /* Same styles as orderCreated template */
+          body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+          table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+          img { -ms-interpolation-mode: bicubic; border: 0; height: auto; line-height: 100%; outline: none; text-decoration: none; }
+          
+          body { margin: 0 !important; padding: 0 !important; width: 100% !important; margin-top: 10px!important; margin-bottom: 10px!important;}
+          
+          a[x-apple-data-detectors] {
+            color: inherit !important;
+            text-decoration: none !important;
+            font-size: inherit !important;
+            font-family: inherit !important;
+            font-weight: inherit !important;
+            line-height: inherit !important;
+          }
+          
+          body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            color: #333333;
+            box-shadow: 0 0 1px 0 rgba(0, 0, 0, 0.15), 0 6px 12px 0 rgba(0, 0, 0, 0.15);
+          }
+          
+          .outer-table {
+            width: 100%;
+            max-width: 600px;
+            margin: 20px auto;
+            border: 1px solid #e5e7eb;
+            border-radius: 20px;
+          }
+          
+          .container {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+          }
+          
+          .header {
+            margin-top: 20px;
+            background: #E5E7EB;
+            padding: 40px 20px;
+            text-align: center;
+          }
+          
+          .logo-img {
+            width: 180px;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+          }
+          
+          .content {
+            padding: 30px 20px;
+          }
+          
+          h1 {
+            color: #060675;
+            font-size: 24px;
+            font-weight: bold;
+            margin: 0 0 20px 0;
+            text-align: center;
+          }
+          
+          p {
+            font-size: 16px;
+            line-height: 1.5;
+            margin: 0 0 20px 0;
+            text-align: center;
+          }
+          
+          .highlight {
+            color: #fecc32;
+            font-weight: bold;
+          }
+          
+          .status-badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            background-color: #10b981;
+            color: white;
+          }
+          
+          .button {
+            display: inline-block;
+            background-color: #fecc32;
+            color: #060675 !important;
+            text-decoration: none;
+            padding: 12px 30px;
+            border-radius: 30px;
+            font-weight: bold;
+            margin: 20px 0;
+            text-align: center;
+          }
+          
+          .payment-details {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+          }
+          
+          .payment-details th {
+            background-color: #f3f4f6;
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+          }
+          
+          .payment-details td {
+            padding: 10px;
+            border-bottom: 1px solid #e5e7eb;
+          }
+          
+          .footer {
+            background: #E5E7EB;
+            padding: 20px;
+            text-align: center;
+            color: #060675;
+            font-size: 12px;
+            margin-bottom: 20px;
+          }
+          
+          @media screen and (max-width: 600px) {
+            .outer-table {
+              width: 100% !important;
+              margin: 10px auto !important;
+            }
+            .container {
+              width: 100% !important;
+              border-radius: 0 !important;
+            }
+            .header, .content, .footer {
+              padding-left: 15px !important;
+              padding-right: 15px !important;
+            }
+            .header {
+              padding-top: 30px !important;
+              padding-bottom: 30px !important;
+            }
+            .logo-img {
+              width: 150px !important;
+            }
+          }
+        </style>
+      </head>
+      <body>
+        <table class="outer-table" border="0" cellpadding="0" cellspacing="0" width="100%">
+          <tr>
+            <td align="center" valign="top">
+              <table class="container" border="0" cellpadding="0" cellspacing="0" width="600">
+                <tr>
+                  <td class="header">
+                    <img src="https://res.cloudinary.com/dplww7z06/image/upload/v1748378717/Jewel_Samarth_Logo_tvtavg.png" alt="Jewel Samarth" class="logo-img" />
+                  </td>
+                </tr>
+                <tr>
+                  <td class="content">
+                    <h1>Payment Successful!</h1>
+                    <p>
+                      Thank you for your payment, ${orderDetails.firstName}! Your order #${orderDetails.orderNumber} is now being processed.
+                    </p>
+                    
+                    <div style="text-align: center; margin: 30px 0;">
+                      <span class="status-badge">Payment Received</span>
+                      <p style="font-size: 14px; margin-top: 10px;">
+                        We've successfully received your payment of ₹${orderDetails.finalAmt}.
+                      </p>
+                    </div>
+                    
+                    <table class="payment-details">
+                      <tr>
+                        <th colspan="2">Payment Details</th>
+                      </tr>
+                      <tr>
+                        <td>Order Number</td>
+                        <td>#${orderDetails.orderNumber}</td>
+                      </tr>
+                      <tr>
+                        <td>Payment Method</td>
+                        <td>${orderDetails.paymentMethod}</td>
+                      </tr>
+                      <tr>
+                        <td>Payment ID</td>
+                        <td>${orderDetails.payment_id}</td>
+                      </tr>
+                      <tr>
+                        <td>Amount Paid</td>
+                        <td>₹${orderDetails.finalAmt}</td>
+                      </tr>
+                      <tr>
+                        <td>Payment Date</td>
+                        <td>${new Date().toLocaleDateString()}</td>
+                      </tr>
+                    </table>
+                    
+                    <div style="text-align: center;">
+                      <a href="https://jewelsamarth.in/orders/${orderDetails._id}" class="button">Track Your Order</a>
+                    </div>
+                    
+                    <p style="font-size: 14px; color: #666666; text-align: center;">
+                      We'll notify you when your order ships. For any questions, contact us at <a href="mailto:support@jewelsamarth.in" style="color: #060675;">support@jewelsamarth.in</a>
+                    </p>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="footer">
+                    © ${year} Jewel Samarth - Crafting Dreams into Reality
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </body>
+      </html>
+    `;
+  },
+
+  statusUpdate: (orderDetails, newStatus) => {
+    const year = new Date().getFullYear();
+    const statusMessages = {
+      processing: "Your order is being prepared for shipment.",
+      shipped: "Your order has been shipped and is on its way to you!",
+      delivered: "Your order has been successfully delivered.",
+      cancelled: "Your order has been cancelled as per your request.",
+    };
+
+    const statusColors = {
+      processing: "#f59e0b",
+      shipped: "#3b82f6",
+      delivered: "#10b981",
+      cancelled: "#ef4444",
+    };
+
+    return `
+      <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+      <html xmlns="http://www.w3.org/1999/xhtml">
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Order Status Update | Jewel Samarth</title>
+        <style type="text/css">
+          /* Same styles as previous templates */
+          body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+          table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+          img { -ms-interpolation-mode: bicubic; border: 0; height: auto; line-height: 100%; outline: none; text-decoration: none; }
+          
+          body { margin: 0 !important; padding: 0 !important; width: 100% !important; margin-top: 10px!important; margin-bottom: 10px!important;}
+          
+          a[x-apple-data-detectors] {
+            color: inherit !important;
+            text-decoration: none !important;
+            font-size: inherit !important;
+            font-family: inherit !important;
+            font-weight: inherit !important;
+            line-height: inherit !important;
+          }
+          
+          body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            color: #333333;
+            box-shadow: 0 0 1px 0 rgba(0, 0, 0, 0.15), 0 6px 12px 0 rgba(0, 0, 0, 0.15);
+          }
+          
+          .outer-table {
+            width: 100%;
+            max-width: 600px;
+            margin: 20px auto;
+            border: 1px solid #e5e7eb;
+            border-radius: 20px;
+          }
+          
+          .container {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+          }
+          
+          .header {
+            margin-top: 20px;
+            background: #E5E7EB;
+            padding: 40px 20px;
+            text-align: center;
+          }
+          
+          .logo-img {
+            width: 180px;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+          }
+          
+          .content {
+            padding: 30px 20px;
+          }
+          
+          h1 {
+            color: #060675;
+            font-size: 24px;
+            font-weight: bold;
+            margin: 0 0 20px 0;
+            text-align: center;
+          }
+          
+          p {
+            font-size: 16px;
+            line-height: 1.5;
+            margin: 0 0 20px 0;
+            text-align: center;
+          }
+          
+          .highlight {
+            color: #fecc32;
+            font-weight: bold;
+          }
+          
+          .status-badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            background-color: ${statusColors[newStatus]};
+            color: white;
+            text-transform: capitalize;
+          }
+          
+          .button {
+            display: inline-block;
+            background-color: #fecc32;
+            color: #060675 !important;
+            text-decoration: none;
+            padding: 12px 30px;
+            border-radius: 30px;
+            font-weight: bold;
+            margin: 20px 0;
+            text-align: center;
+          }
+          
+          .footer {
+            background: #E5E7EB;
+            padding: 20px;
+            text-align: center;
+            color: #060675;
+            font-size: 12px;
+            margin-bottom: 20px;
+          }
+          
+          @media screen and (max-width: 600px) {
+            .outer-table {
+              width: 100% !important;
+              margin: 10px auto !important;
+            }
+            .container {
+              width: 100% !important;
+              border-radius: 0 !important;
+            }
+            .header, .content, .footer {
+              padding-left: 15px !important;
+              padding-right: 15px !important;
+            }
+            .header {
+              padding-top: 30px !important;
+              padding-bottom: 30px !important;
+            }
+            .logo-img {
+              width: 150px !important;
+            }
+          }
+        </style>
+      </head>
+      <body>
+        <table class="outer-table" border="0" cellpadding="0" cellspacing="0" width="100%">
+          <tr>
+            <td align="center" valign="top">
+              <table class="container" border="0" cellpadding="0" cellspacing="0" width="600">
+                <tr>
+                  <td class="header">
+                    <img src="https://res.cloudinary.com/dplww7z06/image/upload/v1748378717/Jewel_Samarth_Logo_tvtavg.png" alt="Jewel Samarth" class="logo-img" />
+                  </td>
+                </tr>
+                <tr>
+                  <td class="content">
+                    <h1>Order Status Updated</h1>
+                    <p>
+                      Hello ${orderDetails.firstName}, the status of your order #${orderDetails.orderNumber} has been updated.
+                    </p>
+                    
+                    <div style="text-align: center; margin: 30px 0;">
+                      <span class="status-badge">${newStatus}</span>
+                      <p style="font-size: 14px; margin-top: 10px;">
+                        ${statusMessages[newStatus]}
+                      </p>
+                    </div>
+                    
+                    <div style="text-align: center;">
+                      <a href="https://jewelsamarth.in/orders/${orderDetails._id}" class="button">View Order Details</a>
+                    </div>
+                    
+                    <p style="font-size: 14px; color: #666666; text-align: center;">
+                      For any questions about your order, please contact us at <a href="mailto:support@jewelsamarth.in" style="color: #060675;">support@jewelsamarth.in</a>
+                    </p>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="footer">
+                    © ${year} Jewel Samarth - Crafting Dreams into Reality
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </body>
+      </html>
+    `;
+  }
+};
+
+// Helper function to send emails
+const sendEmail = async (to, subject, html) => {
+  try {
+    await transporter.sendMail({
+      from: `"Jewel Samarth" <${process.env.EMAIL_USER}>`,
+      to,
+      subject,
+      html,
+    });
+  } catch (error) {
+    console.error("Error sending email:", error);
+  }
+};
 
 const createOrderController = async (req, res) => {
   try {
@@ -90,6 +797,13 @@ const createOrderController = async (req, res) => {
 
     await newOrder.save();
 
+    // Send order confirmation email
+    await sendEmail(
+      email,
+      `Your Jewel Samarth Order #${newOrderNumber} is Confirmed`,
+      emailTemplates.orderCreated(newOrder)
+    );
+
     await Cart.findOneAndDelete({ userId });
 
     res.json({
@@ -122,16 +836,25 @@ const verifyPaymentController = async (req, res) => {
     }
 
     const order = await Order.findOneAndUpdate(
-      { userId },
-      { payment_id: payment_id, paymentStatus: "paid" }
+      { userId, razorpayOrderId: order_id },
+      { payment_id: payment_id, paymentStatus: "paid", status: "processing" },
+      { new: true }
     );
+    
     if (!order) {
       return res.status(404).json({
         success: false,
         message: "Order not found",
       });
     }
-    await order.save();
+
+    // Send payment success email
+    await sendEmail(
+      order.email,
+      `Payment Successful for Order #${order.orderNumber}`,
+      emailTemplates.paymentSuccess(order)
+    );
+
     return res.json({
       success: true,
       message: "Payment Verification Successfull",
@@ -227,9 +950,26 @@ const getAllOrderDetailsController = async (req, res) => {
 const changeOrderStatus = async (req, res) => {
   try {
     const { orderId, status } = req.body;
-    const order = await Order.findById(orderId);
-    order.status = status;
-    await order.save();
+    const order = await Order.findByIdAndUpdate(
+      orderId,
+      { status },
+      { new: true }
+    );
+    
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
+    }
+
+    // Send status update email
+    await sendEmail(
+      order.email,
+      `Order #${order.orderNumber} Status Update`,
+      emailTemplates.statusUpdate(order, status)
+    );
+
     res.json({
       success: true,
       message: `Order is ${status}`,
@@ -245,12 +985,20 @@ const changeOrderStatus = async (req, res) => {
 
 const deleteOrderController = async (req, res) => {
   try {
-    const {orderId} = req.params;
+    const { orderId } = req.params;
     const order = await Order.findByIdAndDelete(orderId);
+    
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
+    }
+
     res.json({
       success: true,
       message: "Order Delete Successfully"
-    })
+    });
   } catch (e) {
     res.json({
       success: false,
