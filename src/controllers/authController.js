@@ -40,29 +40,33 @@ const emailTemplates = {
             background-color: #f7f7f7;
           }
           
+          .outer-table {
+            width: 100%;
+            max-width: 600px;
+            margin: 20px auto;
+          }
+          
           .container {
             width: 100%;
             max-width: 600px;
             margin: 0 auto;
             background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
           }
           
           .header {
             background: #060675;
-            padding: 30px 20px;
+            padding: 40px 20px;
             text-align: center;
           }
           
-          .logo {
-            color: #ffffff;
-            font-size: 24px;
-            font-weight: bold;
-            text-decoration: none;
-            display: inline-block;
-            padding: 10px 20px;
-            background-color: #ffffff;
-            color: #060675;
-            border-radius: 8px;
+          .logo-img {
+            width: 180px;
+            height: auto;
+            display: block;
+            margin: 0 auto;
           }
           
           .content {
@@ -133,24 +137,36 @@ const emailTemplates = {
           
           /* Responsive styles */
           @media screen and (max-width: 600px) {
+            .outer-table {
+              width: 100% !important;
+              margin: 10px auto !important;
+            }
             .container {
               width: 100% !important;
+              border-radius: 0 !important;
             }
             .header, .content, .footer {
               padding-left: 15px !important;
               padding-right: 15px !important;
             }
+            .header {
+              padding-top: 30px !important;
+              padding-bottom: 30px !important;
+            }
+            .logo-img {
+              width: 150px !important;
+            }
           }
         </style>
       </head>
       <body style="margin: 0; padding: 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333333; background-color: #f7f7f7;">
-        <table border="0" cellpadding="0" cellspacing="0" width="100%">
+        <table class="outer-table" border="0" cellpadding="0" cellspacing="0" width="100%">
           <tr>
             <td align="center" valign="top">
               <table class="container" border="0" cellpadding="0" cellspacing="0" width="600">
                 <tr>
                   <td class="header">
-                    <a href="https://jewelsamarth.in" class="logo">JEWEL SAMARTH</a>
+                    <img src="https://res.cloudinary.com/dplww7z06/image/upload/v1748378717/Jewel_Samarth_Logo_tvtavg.png" alt="Jewel Samarth" class="logo-img" />
                   </td>
                 </tr>
                 <tr>
@@ -248,29 +264,33 @@ const emailTemplates = {
             background-color: #f7f7f7;
           }
           
+          .outer-table {
+            width: 100%;
+            max-width: 600px;
+            margin: 20px auto;
+          }
+          
           .container {
             width: 100%;
             max-width: 600px;
             margin: 0 auto;
             background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
           }
           
           .header {
             background: #060675;
-            padding: 30px 20px;
+            padding: 40px 20px;
             text-align: center;
           }
           
-          .logo {
-            color: #ffffff;
-            font-size: 24px;
-            font-weight: bold;
-            text-decoration: none;
-            display: inline-block;
-            padding: 10px 20px;
-            background-color: #ffffff;
-            color: #060675;
-            border-radius: 8px;
+          .logo-img {
+            width: 180px;
+            height: auto;
+            display: block;
+            margin: 0 auto;
           }
           
           .content {
@@ -349,12 +369,24 @@ const emailTemplates = {
           
           /* Responsive styles */
           @media screen and (max-width: 600px) {
+            .outer-table {
+              width: 100% !important;
+              margin: 10px auto !important;
+            }
             .container {
               width: 100% !important;
+              border-radius: 0 !important;
             }
             .header, .content, .footer {
               padding-left: 15px !important;
               padding-right: 15px !important;
+            }
+            .header {
+              padding-top: 30px !important;
+              padding-bottom: 30px !important;
+            }
+            .logo-img {
+              width: 150px !important;
             }
             .otp-code {
               font-size: 28px !important;
@@ -364,13 +396,13 @@ const emailTemplates = {
         </style>
       </head>
       <body style="margin: 0; padding: 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333333; background-color: #f7f7f7;">
-        <table border="0" cellpadding="0" cellspacing="0" width="100%">
+        <table class="outer-table" border="0" cellpadding="0" cellspacing="0" width="100%">
           <tr>
             <td align="center" valign="top">
               <table class="container" border="0" cellpadding="0" cellspacing="0" width="600">
                 <tr>
                   <td class="header">
-                    <a href="https://jewelsamarth.in" class="logo">JEWEL SAMARTH</a>
+                    <img src="https://res.cloudinary.com/dplww7z06/image/upload/v1748378717/Jewel_Samarth_Logo_tvtavg.png" alt="Jewel Samarth" class="logo-img" />
                   </td>
                 </tr>
                 <tr>
