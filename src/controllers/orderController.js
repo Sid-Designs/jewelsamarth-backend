@@ -922,77 +922,32 @@ const getOrderDetailsController = async (req, res) => {
 
 const getAllOrdersController = async (req, res) => {
   try {
-    const { page = 1, limit = 10, status } = req.query;
-    const filter = {};
-    
-    if (status && Object.values(ORDER_STATUS).includes(status)) {
-      filter.status = status;
-    }
-    
-    const orders = await Order.find(filter)
-      .sort({ createdAt: -1 })
-      .skip((page - 1) * limit)
-      .limit(Number(limit));
-    
-    const totalOrders = await Order.countDocuments(filter);
-    
+    const orders = await Order.find({});
     res.json({
-      success: true,
       order: orders,
-      pagination: {
-        page: Number(page),
-        limit: Number(limit),
-        total: totalOrders,
-        pages: Math.ceil(totalOrders / limit)
-      }
     });
-    
-  } catch (error) {
-    console.error("Get all orders error:", error);
-    res.status(500).json({
+  } catch (e) {
+    res.json({
       success: false,
-      message: "Failed to fetch orders",
-      error: process.env.NODE_ENV === "development" ? error.message : undefined
+      message: "Error Occured While Fetching Products",
+      error: e.message,
     });
   }
 };
 
 const getAllOrderDetailsController = async (req, res) => {
   try {
-    const { userId } = req.params;
-    const { page = 1, limit = 10 } = req.query;
-    
-    if (!userId) {
-      return res.status(400).json({
-        success: false,
-        message: "User ID is required"
-      });
-    }
-    
-    const orders = await Order.find({ userId })
-      .sort({ createdAt: -1 })
-      .skip((page - 1) * limit)
-      .limit(Number(limit));
-    
-    const totalOrders = await Order.countDocuments({ userId });
-    
+    const { userId } = req.body;
+    const orders = await Order.find({ userId });
     res.json({
       success: true,
-      order: orders,
-      pagination: {
-        page: Number(page),
-        limit: Number(limit),
-        total: totalOrders,
-        pages: Math.ceil(totalOrders / limit)
-      }
+      orders,
     });
-    
-  } catch (error) {
-    console.error("Get user orders error:", error);
-    res.status(500).json({
+  } catch (e) {
+    res.json({
       success: false,
-      message: "Failed to fetch user orders",
-      error: process.env.NODE_ENV === "development" ? error.message : undefined
+      message: "Error Occured While Fetching All Orders",
+      error: e.message,
     });
   }
 };
