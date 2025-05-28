@@ -679,94 +679,109 @@ const generateOrderNumber = async () => {
   return lastOrder ? lastOrder.orderNumber + 1 : 10001;
 };
 
-const validateOrderData = (data) => {
-  const requiredFields = [
-    "userId", "firstName", "lastName", "phone", "pincode", 
-    "address", "city", "state", "email", "products", 
-    "totalAmt", "finalAmt", "paymentMethod"
-  ];
-  
-  const missingFields = requiredFields.filter(field => !data[field]);
-  if (missingFields.length > 0) {
-    return {
-      isValid: false,
-      message: `Missing required fields: ${missingFields.join(", ")}`
-    };
-  }
-  
-  if (!Array.isArray(data.products) || data.products.length === 0) {
-    return {
-      isValid: false,
-      message: "Products must be a non-empty array"
-    };
-  }
-  
-  return { isValid: true };
-};
-
 // Controllers
 const createOrderController = async (req, res) => {
   try {
-    const orderData = req.body;
-    
-    // Validate input data
-    const validation = validateOrderData(orderData);
-    if (!validation.isValid) {
+    const {
+      userId,
+      firstName,
+      lastName,
+      phone,
+      pincode,
+      address,
+      city,
+      state,
+      email,
+      products,
+      totalAmt,
+      discount,
+      finalAmt,
+      paymentMethod,
+    } = req.body;
+
+    // Check for missing fields
+    if (
+      !userId ||
+      !firstName ||
+      !lastName ||
+      !phone ||
+      !pincode ||
+      !address ||
+      !city ||
+      !state ||
+      !email ||
+      !products ||
+      !totalAmt ||
+      !finalAmt ||
+      !paymentMethod
+    ) {
       return res.status(400).json({
         success: false,
-        message: validation.message
+        message: "Missing required details",
       });
     }
-    
-    // Generate Razorpay order
-    const razorpayOptions = {
-      amount: orderData.finalAmt * 100, // Amount in paise
+
+    // Razorpay Order Options
+    const options = {
+      amount: finalAmt * 100, // Amount in paise
       currency: "INR",
       receipt: `JSO_${Date.now()}_${crypto.randomBytes(10).toString("hex")}`,
       payment_capture: 1,
     };
-    
-    const razorpayOrder = await razorpay.orders.create(razorpayOptions);
-    
-    // Create database order
+
+    // Create Razorpay Order
+    const razorpayOrder = await razorpay.orders.create(options);
+
+    // Find the highest order number and increment it
+    const totalOrders = await Order.countDocuments(); // Count the total number of orders
+    const newOrderNumber = totalOrders + 1 + 10000; // Start sequence from 10001
+
+    // Create and save order in database
     const newOrder = new Order({
-      ...orderData,
+      userId,
+      firstName,
+      lastName,
+      phone,
+      pincode,
+      address,
+      city,
+      state,
+      email,
+      products,
+      totalAmt,
+      discount,
+      finalAmt,
+      paymentMethod,
       razorpayOrderId: razorpayOrder.id,
-      status: ORDER_STATUS.PENDING,
-      paymentStatus: PAYMENT_STATUS.PENDING,
-      orderNumber: await generateOrderNumber(),
+      status: "pending",
+      orderNumber: newOrderNumber,
     });
-    
+
     await newOrder.save();
-    
-    // Clear user's cart
-    await Cart.findOneAndDelete({ userId: orderData.userId });
-    
-    // Send order confirmation email
+
+    await Cart.findOneAndDelete({ userId });
     try {
       await transporter.sendMail({
         from: `"Jewel Samarth" <${process.env.SMTP_NO_REPLY_SENDER_EMAIL}>`,
-        to: orderData.email,
-        subject: "Your Order Confirmation - Jewel Samarth",
-        html: emailTemplates.orderCreated(newOrder.toObject())
+        to: order.email,
+        subject: "Payment Received - Jewel Samarth",
+        html: emailTemplates.orderCreated(newOrder.toObject()),
       });
     } catch (emailError) {
-      console.error("Failed to send order confirmation email:", emailError);
+      console.error("Failed to send payment confirmation email:", emailError);
     }
-    
-    res.status(201).json({
+
+    res.json({
       success: true,
       message: "Order created successfully",
       order: newOrder,
-      razorpayOrder
+      razorpayOrder,
     });
-    
-  } catch (error) {
-    console.error("Order creation error:", error);
-    res.status(500).json({
+  } catch (e) {
+    res.json({
       success: false,
-      message: "Failed to create order",
-      error: process.env.NODE_ENV === "development" ? error.message : undefined
+      message: `Error occurred while creating order: ${e.message}`,
+      error: e.message,
     });
   }
 };
