@@ -168,7 +168,7 @@ const emailTemplates = {
             </div>
             
             <div style="text-align: center;">
-              <a href="https://jewelsamarth.in/orders/${orderDetails._id}" class="button">View Order Details</a>
+              <a href="https://jewelsamarth.in/order/${orderDetails._id}" class="button">View Order Details</a>
             </div>
           </div>
           
@@ -306,7 +306,7 @@ const emailTemplates = {
             </div>
             
             <div style="text-align: center;">
-              <a href="https://jewelsamarth.in/orders/${orderDetails._id}" class="button">Track Your Order</a>
+              <a href="https://jewelsamarth.in/order/${orderDetails._id}" class="button">Track Your Order</a>
             </div>
           </div>
           
@@ -426,7 +426,7 @@ const emailTemplates = {
             </div>
             
             <div style="text-align: center;">
-              <a href="https://jewelsamarth.in/orders/${orderDetails._id}" class="button">View Order Details</a>
+              <a href="https://jewelsamarth.in/order/${orderDetails._id}" class="button">View Order Details</a>
             </div>
           </div>
           
