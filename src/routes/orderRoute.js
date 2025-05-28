@@ -4,6 +4,10 @@ const checkAdmin = require("../middlewares/checkAdmin");
 const {
   createOrderController,
   verifyPaymentController,
+  createCouponController,
+  updateCouponController,
+  couponDetailsController,
+  deleteCouponController,
   couponController,
   getOrderDetailsController,
   getAllOrdersController,
@@ -14,6 +18,10 @@ const {
 
 router.post("/checkout", createOrderController);
 router.post("/verify", verifyPaymentController);
+router.post("/coupon/create", checkAdmin, createCouponController);
+router.delete("/coupon/delete/:couponId", checkAdmin, deleteCouponController);
+router.get("/coupon/all", checkAdmin, couponDetailsController)
+router.put("/coupon/update/:couponId", checkAdmin, updateCouponController);
 router.post("/coupon/apply", couponController);
 router.post("/details/:orderId", getOrderDetailsController);
 router.get("/all", checkAdmin, getAllOrdersController);
