@@ -74,6 +74,8 @@ const emailTemplates = {
             border-radius: 10px;
             overflow: hidden;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            border: 1px solid #e5e7eb;
+            border-radius: 20px;
           }
           
           .header {
@@ -147,7 +149,7 @@ const emailTemplates = {
               <tr>
                 <th colspan="2">Order Summary</th>
               </tr>
-              ${productsList}
+              ${products}
               <tr>
                 <td><strong>Subtotal</strong></td>
                 <td>₹${orderDetails.totalAmt}</td>
