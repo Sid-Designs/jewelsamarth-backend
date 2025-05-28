@@ -938,7 +938,7 @@ const getAllOrdersController = async (req, res) => {
     
     res.json({
       success: true,
-      orders,
+      order: orders,
       pagination: {
         page: Number(page),
         limit: Number(limit),
@@ -978,7 +978,7 @@ const getAllOrderDetailsController = async (req, res) => {
     
     res.json({
       success: true,
-      orders,
+      order: orders,
       pagination: {
         page: Number(page),
         limit: Number(limit),
