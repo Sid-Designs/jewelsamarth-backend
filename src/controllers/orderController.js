@@ -861,30 +861,22 @@ const verifyPaymentController = async (req, res) => {
 
 const createCouponController = async (req, res) => {
   try {
-    const { code, discount, validFrom, validUntil, minPurchase, maxUses } = req.body;
-    
+    const { code, discount, expiryDate } = req.body;
+
     // Check if coupon already exists
     const existingCoupon = await Coupon.findOne({ code });
     if (existingCoupon) {
       return res.status(400).json({ error: 'Coupon code already exists' });
     }
 
-    // Validate dates
-    if (new Date(validUntil) <= new Date(validFrom)) {
-      return res.status(400).json({ error: 'Valid until date must be after valid from date' });
+    // Validate expiry date
+    if (new Date(expiryDate) <= new Date()) {
+      return res.status(400).json({ error: 'Expiry date must be in the future' });
     }
 
-    const coupon = new Coupon({
-      code,
-      discount,
-      validFrom,
-      validUntil,
-      minPurchase: minPurchase || 0,
-      maxUses: maxUses || null,
-      createdBy: req.user._id
-    });
-
+    const coupon = new Coupon({ code, discount, expiryDate });
     await coupon.save();
+    
     res.status(201).json(coupon);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -894,27 +886,15 @@ const createCouponController = async (req, res) => {
 const updateCouponController = async (req, res) => {
   try {
     const { couponId } = req.params;
-    const updates = req.body;
+    const { discount, expiryDate } = req.body;
 
-    // Remove immutable fields
-    delete updates.code;
-    delete updates.createdBy;
-    delete updates.usedCount;
-
-    // If updating dates, validate them
-    if (updates.validFrom || updates.validUntil) {
-      const coupon = await Coupon.findById(couponId);
-      const validFrom = updates.validFrom ? new Date(updates.validFrom) : coupon.validFrom;
-      const validUntil = updates.validUntil ? new Date(updates.validUntil) : coupon.validUntil;
-      
-      if (validUntil <= validFrom) {
-        return res.status(400).json({ error: 'Valid until date must be after valid from date' });
-      }
+    if (expiryDate && new Date(expiryDate) <= new Date()) {
+      return res.status(400).json({ error: 'Expiry date must be in the future' });
     }
 
     const updatedCoupon = await Coupon.findByIdAndUpdate(
       couponId,
-      updates,
+      { discount, expiryDate },
       { new: true, runValidators: true }
     );
 
@@ -943,33 +923,15 @@ const deleteCouponController = async (req, res) => {
   }
 };
 
-const couponDetailsController = async(req, res) => {
+const couponDetailsController = async (req, res) => {
   try {
-    // All coupons
-    const coupons = await Coupon.find({}).sort({ createdAt: -1 });
-    res.json({
-      success: true,
-      coupons: coupons.map(coupon => ({
-        id: coupon._id,
-        code: coupon.code,
-        discount: coupon.discount,
-        validFrom: coupon.validFrom,
-        validUntil: coupon.validUntil,
-        minPurchase: coupon.minPurchase,
-        maxUses: coupon.maxUses,
-        usedCount: coupon.usedCount || 0
-      }))
-    });
-  }catch (error) {
-    console.error("Coupon details error:", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to fetch coupon details",
-      error: process.env.NODE_ENV === "development" ? error.message : undefined
-    });
+    const coupons = await Coupon.find({}).sort({ expiryDate: 1 });
+    
+    res.json({ success: true, coupons });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Failed to fetch coupon details' });
   }
-
-}
+};
 
 const couponController = async (req, res) => {
   try {
