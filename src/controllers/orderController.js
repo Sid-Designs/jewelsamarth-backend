@@ -205,6 +205,8 @@ const emailTemplates = {
             border-radius: 10px;
             overflow: hidden;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            border: 1px solid #e5e7eb;
+            border-radius: 20px;
           }
           
           .header {
@@ -261,6 +263,9 @@ const emailTemplates = {
             text-align: center;
             background-color: #f8f9fa;
             font-size: 12px;
+          }
+          p{
+          text-align: center;
           }
         </style>
       </head>
@@ -352,6 +357,8 @@ const emailTemplates = {
             border-radius: 10px;
             overflow: hidden;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            border: 1px solid #e5e7eb;
+            border-radius: 20px;
           }
           
           .header {
@@ -397,6 +404,9 @@ const emailTemplates = {
             text-align: center;
             background-color: #f8f9fa;
             font-size: 12px;
+          }
+          p {
+            text-align: center;
           }
         </style>
       </head>
