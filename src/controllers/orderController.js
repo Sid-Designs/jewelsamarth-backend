@@ -133,6 +133,9 @@ const emailTemplates = {
             background-color: #f8f9fa;
             font-size: 12px;
           }
+          p {
+            text-align: center;
+          }
         </style>
       </head>
       <body>
