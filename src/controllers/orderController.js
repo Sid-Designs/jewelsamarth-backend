@@ -792,45 +792,47 @@ const createOrderController = async (req, res) => {
 const verifyPaymentController = async (req, res) => {
   try {
     const { order_id, payment_id, signature, userId } = req.body;
-
+    console.log(order_id, payment_id, signature, userId);
+    
     if (!order_id || !payment_id || !signature || !userId) {
       return res.status(400).json({
         success: false,
         message: "Missing required payment verification details"
       });
     }
-
-    // Step 1: Verify Razorpay signature
+    
+    // Verify payment signature
     const generatedSignature = crypto
       .createHmac("sha256", process.env.RAZORPAY_SECRET_ID)
       .update(`${order_id}|${payment_id}`)
       .digest("hex");
-
+      
     if (generatedSignature !== signature) {
       return res.status(400).json({
         success: false,
         message: "Payment verification failed: Invalid signature"
       });
     }
-
-    // Step 2: Find the order first
-    const order = await Order.findOne({ razorpayOrderId: order_id, userId });
-
+    
+    // Update order status
+    const order = await Order.findOneAndUpdate(
+      { razorpayOrderId: order_id, userId },
+      { 
+        payment_id,
+        paymentStatus: PAYMENT_STATUS.PAID,
+        paymentDate: new Date()
+      },
+      { new: true }
+    );
+    
     if (!order) {
       return res.status(404).json({
         success: false,
-        message: "Order not found. Please check the Razorpay Order ID and User ID"
+        message: "Order not found"
       });
     }
-
-    // Step 3: Update order details
-    order.payment_id = payment_id;
-    order.paymentStatus = PAYMENT_STATUS.PAID;
-    order.paymentDate = new Date();
-
-    await order.save();
-
-    // Step 4: Send confirmation email
+    
+    // Send payment confirmation email
     try {
       await transporter.sendMail({
         from: `"Jewel Samarth" <${process.env.SMTP_NO_REPLY_SENDER_EMAIL}>`,
@@ -841,16 +843,16 @@ const verifyPaymentController = async (req, res) => {
     } catch (emailError) {
       console.error("Failed to send payment confirmation email:", emailError);
     }
-
-    return res.status(200).json({
+    
+    res.json({
       success: true,
-      message: "Payment verified and order updated successfully",
+      message: "Payment verified successfully",
       order
     });
-
+    
   } catch (error) {
     console.error("Payment verification error:", error);
-    return res.status(500).json({
+    res.status(500).json({
       success: false,
       message: "Failed to verify payment",
       error: process.env.NODE_ENV === "development" ? error.message : undefined
@@ -931,6 +933,7 @@ const couponDetailsController = async (req, res) => {
     res.status(500).json({ success: false, message: 'Failed to fetch coupon details' });
   }
 };
+
 
 const couponController = async (req, res) => {
   try {
