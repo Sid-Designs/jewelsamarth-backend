@@ -792,7 +792,6 @@ const createOrderController = async (req, res) => {
 const verifyPaymentController = async (req, res) => {
   try {
     const { order_id, payment_id, signature, userId } = req.body;
-    console.log(order_id, payment_id, signature, userId);
     
     if (!order_id || !payment_id || !signature || !userId) {
       return res.status(400).json({
