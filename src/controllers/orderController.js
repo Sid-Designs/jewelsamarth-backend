@@ -761,18 +761,19 @@ const createOrderController = async (req, res) => {
     });
 
     await newOrder.save();
-
-    await Cart.findOneAndDelete({ userId });
+     // Send payment confirmation email
     try {
       await transporter.sendMail({
         from: `"Jewel Samarth" <${process.env.SMTP_NO_REPLY_SENDER_EMAIL}>`,
         to: order.email,
-        subject: "Payment Received - Jewel Samarth",
-        html: emailTemplates.orderCreated(newOrder.toObject()),
+        subject: "Order Received - Jewel Samarth",
+        html: emailTemplates.orderCreated(order.toObject())
       });
     } catch (emailError) {
       console.error("Failed to send payment confirmation email:", emailError);
     }
+
+    await Cart.findOneAndDelete({ userId });
 
     res.json({
       success: true,
