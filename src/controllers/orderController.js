@@ -9,7 +9,7 @@ require("dotenv").config();
 // Razorpay Setup
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_KEY_SECRET,
+  key_secret: process.env.RAZORPAY_SECRET_ID,
 });
 
 // Constants
@@ -786,11 +786,12 @@ const createOrderController = async (req, res) => {
       razorpayOrder,
     });
   } catch (e) {
-    console.error("Error creating order:", e);
+    const errMsg = e?.message || e?.error?.description || (typeof e === 'object' ? JSON.stringify(e) : String(e));
+    console.error("Error creating order:", errMsg, e);
     res.status(500).json({
       success: false,
-      message: `Error occurred while creating order: ${e.message || e}`,
-      error: e.message || String(e),
+      message: `Error occurred while creating order: ${errMsg}`,
+      error: errMsg,
     });
   }
 };
@@ -808,7 +809,7 @@ const verifyPaymentController = async (req, res) => {
     
     // Verify payment signature
     const generatedSignature = crypto
-      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+      .createHmac("sha256", process.env.RAZORPAY_SECRET_ID)
       .update(`${order_id}|${payment_id}`)
       .digest("hex");
       
