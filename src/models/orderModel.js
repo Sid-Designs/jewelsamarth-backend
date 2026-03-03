@@ -65,6 +65,10 @@ const Order = new Schema(
       enum: ["pending", "paid"],
       default: "pending",
     },
+    razorpayOrderId:{
+      type: String,
+      required: false,
+    },
     payment_id:{
       type: String,
       required: false,

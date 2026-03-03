@@ -9,7 +9,7 @@ require("dotenv").config();
 // Razorpay Setup
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_SECRET_ID,
+  key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 
 // Constants
@@ -152,7 +152,7 @@ const emailTemplates = {
               <tr>
                 <th colspan="2">Order Summary</th>
               </tr>
-              ${products}
+              ${productsList}
               <tr>
                 <td><strong>Subtotal</strong></td>
                 <td>₹${orderDetails.totalAmt}</td>
@@ -724,20 +724,22 @@ const createOrderController = async (req, res) => {
       });
     }
 
-    // Razorpay Order Options
-    const options = {
-      amount: finalAmt * 100, // Amount in paise
-      currency: "INR",
-      receipt: `JSO_${Date.now()}_${crypto.randomBytes(10).toString("hex")}`,
-      payment_capture: 1,
-    };
-
-    // Create Razorpay Order
-    const razorpayOrder = await razorpay.orders.create(options);
-
     // Find the highest order number and increment it
-    const totalOrders = await Order.countDocuments(); // Count the total number of orders
-    const newOrderNumber = totalOrders + 1 + 10000; // Start sequence from 10001
+    const totalOrders = await Order.countDocuments();
+    const newOrderNumber = totalOrders + 1 + 10000;
+
+    let razorpayOrder = null;
+
+    // Only create Razorpay order for online payments (not COD)
+    if (paymentMethod !== "cod") {
+      const options = {
+        amount: finalAmt * 100, // Amount in paise
+        currency: "INR",
+        receipt: `JSO_${Date.now()}_${crypto.randomBytes(10).toString("hex")}`,
+        payment_capture: 1,
+      };
+      razorpayOrder = await razorpay.orders.create(options);
+    }
 
     // Create and save order in database
     const newOrder = new Order({
@@ -755,22 +757,24 @@ const createOrderController = async (req, res) => {
       discount,
       finalAmt,
       paymentMethod,
-      razorpayOrderId: razorpayOrder.id,
-      status: "pending",
+      razorpayOrderId: razorpayOrder ? razorpayOrder.id : null,
+      status: paymentMethod === "cod" ? "processing" : "pending",
+      paymentStatus: paymentMethod === "cod" ? "pending" : "pending",
       orderNumber: newOrderNumber,
     });
 
     await newOrder.save();
-     // Send payment confirmation email
+
+    // Send order confirmation email
     try {
       await transporter.sendMail({
         from: `"Jewel Samarth" <${process.env.SMTP_NO_REPLY_SENDER_EMAIL}>`,
-        to: order.email,
+        to: newOrder.email,
         subject: "Order Received - Jewel Samarth",
-        html: emailTemplates.orderCreated(order.toObject())
+        html: emailTemplates.orderCreated(newOrder.toObject())
       });
     } catch (emailError) {
-      console.error("Failed to send payment confirmation email:", emailError);
+      console.error("Failed to send order confirmation email:", emailError);
     }
 
     await Cart.findOneAndDelete({ userId });
@@ -782,10 +786,11 @@ const createOrderController = async (req, res) => {
       razorpayOrder,
     });
   } catch (e) {
+    console.error("Error creating order:", e);
     res.json({
       success: false,
-      message: `Error occurred while creating order: ${e.message}`,
-      error: e.message,
+      message: `Error occurred while creating order: ${e}`,
+      error: e,
     });
   }
 };
@@ -803,7 +808,7 @@ const verifyPaymentController = async (req, res) => {
     
     // Verify payment signature
     const generatedSignature = crypto
-      .createHmac("sha256", process.env.RAZORPAY_SECRET_ID)
+      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
       .update(`${order_id}|${payment_id}`)
       .digest("hex");
       
