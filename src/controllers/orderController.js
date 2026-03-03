@@ -724,9 +724,9 @@ const createOrderController = async (req, res) => {
       });
     }
 
-    // Find the highest order number and increment it
-    const totalOrders = await Order.countDocuments();
-    const newOrderNumber = totalOrders + 1 + 10000;
+    // Find the highest order number and increment from it
+    const lastOrder = await Order.findOne().sort({ orderNumber: -1 }).limit(1);
+    const newOrderNumber = lastOrder ? Number(lastOrder.orderNumber) + 1 : 10001;
 
     let razorpayOrder = null;
 
@@ -787,10 +787,10 @@ const createOrderController = async (req, res) => {
     });
   } catch (e) {
     console.error("Error creating order:", e);
-    res.json({
+    res.status(500).json({
       success: false,
-      message: `Error occurred while creating order: ${e}`,
-      error: e,
+      message: `Error occurred while creating order: ${e.message || e}`,
+      error: e.message || String(e),
     });
   }
 };
